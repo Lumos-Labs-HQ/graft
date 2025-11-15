@@ -13,8 +13,10 @@ import (
 )
 
 type Adapter struct {
-	db *sql.DB
-	qb squirrel.StatementBuilderType
+	db          *sql.DB
+	qb          squirrel.StatementBuilderType
+	originalDSN string
+	currentDB   string
 }
 
 var typeMap = map[string]string{
@@ -62,6 +64,18 @@ func (m *Adapter) Connect(ctx context.Context, url string) error {
 		}
 	}
 
+
+	m.originalDSN = dsn
+	
+	if idx := strings.Index(dsn, "/"); idx > 0 {
+		dbPart := dsn[idx+1:]
+		if qIdx := strings.Index(dbPart, "?"); qIdx > 0 {
+			m.currentDB = dbPart[:qIdx]
+		} else {
+			m.currentDB = dbPart
+		}
+	}
+
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		return fmt.Errorf("failed to open MySQL connection: %w", err)
@@ -72,6 +86,40 @@ func (m *Adapter) Connect(ctx context.Context, url string) error {
 	db.SetConnMaxIdleTime(3 * time.Minute)  
 
 	m.db = db
+	return nil
+}
+
+func (m *Adapter) SwitchDatabase(ctx context.Context, dbName string) error {
+	if m.currentDB == dbName {
+		return nil 
+	}
+	
+	if m.db != nil {
+		m.db.Close()
+	}
+	
+	newDSN := m.originalDSN
+	if idx := strings.Index(newDSN, "/"); idx > 0 {
+		prefix := newDSN[:idx+1]
+		suffix := newDSN[idx+1:]
+		if qIdx := strings.Index(suffix, "?"); qIdx > 0 {
+			newDSN = prefix + dbName + suffix[qIdx:]
+		} else {
+			newDSN = prefix + dbName
+		}
+	}
+	
+	db, err := sql.Open("mysql", newDSN)
+	if err != nil {
+		return fmt.Errorf("failed to switch to database %s: %w", dbName, err)
+	}
+	db.SetMaxOpenConns(2)
+	db.SetMaxIdleConns(0)
+	db.SetConnMaxLifetime(15 * time.Minute)
+	db.SetConnMaxIdleTime(3 * time.Minute)
+	
+	m.db = db
+	m.currentDB = dbName
 	return nil
 }
 
@@ -138,12 +186,25 @@ func (m *Adapter) GetAppliedMigrations(ctx context.Context) (map[string]*time.Ti
 
 	for rows.Next() {
 		var id string
-		var finishedAt *time.Time
-		if err := rows.Scan(&id, &finishedAt); err != nil {
-			continue
+		var finishedAtBytes []byte
+		if err := rows.Scan(&id, &finishedAtBytes); err != nil {
+			return nil, fmt.Errorf("failed to scan migration row: %w", err)
 		}
-		applied[id] = finishedAt
+		
+		if len(finishedAtBytes) > 0 {
+			
+			finishedAt, err := time.Parse("2006-01-02 15:04:05", string(finishedAtBytes))
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse finished_at timestamp: %w", err)
+			}
+			applied[id] = &finishedAt
+		}
 	}
+	
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating migration rows: %w", err)
+	}
+	
 	return applied, nil
 }
 
@@ -165,12 +226,59 @@ func (m *Adapter) RecordMigration(ctx context.Context, migrationID, name, checks
 	return tx.Commit()
 }
 
+func (m *Adapter) ExecuteAndRecordMigration(ctx context.Context, migrationID, name, checksum string, migrationSQL string) error {
+	tx, err := m.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	_, err = tx.ExecContext(ctx, `
+		INSERT INTO _flash_migrations (id, migration_name, checksum, started_at, applied_steps_count)
+		VALUES (?, ?, ?, NOW(), 0)
+	`, migrationID, name, checksum)
+	if err != nil {
+		return fmt.Errorf("failed to record migration start: %w", err)
+	}
+
+	if migrationSQL != "" {
+		statements := common.ParseSQLStatements(migrationSQL)
+		for i, stmt := range statements {
+			stmt = strings.TrimSpace(stmt)
+			if stmt == "" || strings.HasPrefix(stmt, "--") {
+				continue
+			}
+			if _, err := tx.ExecContext(ctx, stmt); err != nil {
+				return fmt.Errorf("failed to execute statement %d: %w", i+1, err)
+			}
+		}
+	}
+
+	_, err = tx.ExecContext(ctx, `
+		UPDATE _flash_migrations 
+		SET finished_at = NOW(), applied_steps_count = 1
+		WHERE id = ?
+	`, migrationID)
+	if err != nil {
+		return fmt.Errorf("failed to update migration finish time: %w", err)
+	}
+
+	return tx.Commit()
+}
+
 func (m *Adapter) ExecuteMigration(ctx context.Context, migrationSQL string) error {
 	tx, err := m.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer tx.Rollback()
+
+	var currentDB string
+	if err := tx.QueryRowContext(ctx, "SELECT DATABASE()").Scan(&currentDB); err == nil && currentDB != "" {
+		if _, err := tx.ExecContext(ctx, fmt.Sprintf("USE `%s`", currentDB)); err != nil {
+			return fmt.Errorf("failed to set database in transaction: %w", err)
+		}
+	}
 
 	statements := common.ParseSQLStatements(migrationSQL)
 
@@ -194,6 +302,22 @@ func (m *Adapter) ExecuteMigration(ctx context.Context, migrationSQL string) err
 }
 
 func (m *Adapter) ExecuteQuery(ctx context.Context, query string) (*common.QueryResult, error) {
+	trimmedQuery := strings.TrimSpace(strings.ToUpper(query))
+	if strings.HasPrefix(trimmedQuery, "USE ") || 
+	   strings.HasPrefix(trimmedQuery, "SET ") ||
+	   strings.HasPrefix(trimmedQuery, "CREATE ") ||
+	   strings.HasPrefix(trimmedQuery, "DROP ") ||
+	   strings.HasPrefix(trimmedQuery, "ALTER ") {
+		_, err := m.db.ExecContext(ctx, query)
+		if err != nil {
+			return nil, fmt.Errorf("failed to execute command: %w", err)
+		}
+		return &common.QueryResult{
+			Columns: []string{},
+			Rows:    []map[string]interface{}{},
+		}, nil
+	}
+	
 	rows, err := m.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute query: %w", err)
@@ -244,4 +368,10 @@ func (m *Adapter) MapColumnType(dbType string) string {
 		return mapped
 	}
 	return strings.ToUpper(dbType)
+}
+
+func (m *Adapter) GetCurrentDatabase(ctx context.Context) (string, error) {
+	var dbName string
+	err := m.db.QueryRowContext(ctx, "SELECT DATABASE()").Scan(&dbName)
+	return dbName, err
 }

@@ -150,13 +150,11 @@ func (m *Migrator) applySingleMigrationSafely(ctx context.Context, migration typ
 		return fmt.Errorf("failed to read migration file: %w", err)
 	}
 
-	if err := m.adapter.ExecuteMigration(ctx, string(content)); err != nil {
-		return fmt.Errorf("failed to execute: %w", err)
-	}
-
 	checksum := fmt.Sprintf("%x", len(content))
-	if err := m.adapter.RecordMigration(ctx, migration.ID, migration.Name, checksum); err != nil {
-		return fmt.Errorf("failed to record: %w", err)
+	
+	// Use the combined method that does both operations in a single transaction
+	if err := m.adapter.ExecuteAndRecordMigration(ctx, migration.ID, migration.Name, checksum, string(content)); err != nil {
+		return err
 	}
 
 	return nil

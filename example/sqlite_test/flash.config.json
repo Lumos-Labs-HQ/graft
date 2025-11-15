@@ -1,0 +1,11 @@
+{
+  "version": "2",
+  "schema_path": "db/schema/schema.sql",
+  "queries": "db/queries/",
+  "migrations_path": "db/migrations",
+  "export_path": "db/export",
+  "database": {
+    "provider": "sqlite",
+    "url_env": "DATABASE_URL"
+  }
+}

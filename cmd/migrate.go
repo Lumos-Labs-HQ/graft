@@ -65,7 +65,13 @@ Examples:
 
 		ctx := context.Background()
 
-		m, err := migrator.NewMigrator(cfg)
+		// Get current branch info
+		branchName, branchSchema, err := migrator.GetCurrentBranchInfo(cfg)
+		if err == nil && branchName != "main" {
+			fmt.Printf("📍 Creating migration for branch: %s (schema: %s)\n", branchName, branchSchema)
+		}
+
+		m, err := migrator.NewBranchAwareMigrator(cfg)
 		if err != nil {
 			return fmt.Errorf("failed to create migrator: %w", err)
 		}

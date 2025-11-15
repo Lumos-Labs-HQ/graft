@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Lumos-Labs-HQ/flash/internal/branch"
+	"github.com/Lumos-Labs-HQ/flash/internal/config"
 	"github.com/Lumos-Labs-HQ/flash/internal/database"
 )
 
@@ -20,7 +22,41 @@ func NewService(adapter database.DatabaseAdapter) *Service {
 	}
 }
 
+
+func (s *Service) ensureCorrectSchema() error {
+	cfg, err := config.Load()
+	if err != nil {
+		return err
+	}
+	
+	branchMgr := branch.NewMetadataManager(cfg.MigrationsPath)
+	store, err := branchMgr.Load()
+	if err != nil {
+		return err
+	}
+	currentBranch := store.GetBranch(store.Current)
+	if currentBranch == nil {
+		return nil
+	}
+	
+	if cfg.Database.Provider == "postgresql" || cfg.Database.Provider == "postgres" {
+		query := fmt.Sprintf("SET search_path TO %s, public", currentBranch.Schema)
+		_, err = s.adapter.ExecuteQuery(s.ctx, query)
+		return err
+	} else if cfg.Database.Provider == "mysql" || cfg.Database.Provider == "sqlite" || cfg.Database.Provider == "sqlite3" {
+		type DatabaseSwitcher interface {
+			SwitchDatabase(ctx context.Context, dbName string) error
+		}
+		if switcher, ok := s.adapter.(DatabaseSwitcher); ok {
+			return switcher.SwitchDatabase(s.ctx, currentBranch.Schema)
+		}
+	}
+	
+	return nil
+}
+
 func (s *Service) GetTables() ([]TableInfo, error) {
+	s.ensureCorrectSchema()
 	tables, err := s.adapter.GetAllTableNames(s.ctx)
 	if err != nil {
 		return nil, err
@@ -56,6 +92,7 @@ func (s *Service) GetTables() ([]TableInfo, error) {
 }
 
 func (s *Service) GetTableData(tableName string, page, limit int) (*TableData, error) {
+	s.ensureCorrectSchema()
 	schema, err := s.adapter.GetTableColumns(s.ctx, tableName)
 	if err != nil {
 		return nil, err
@@ -97,6 +134,7 @@ func quoteIdentifier(name string) string {
 }
 
 func (s *Service) SaveChanges(tableName string, changes []RowChange) error {
+	s.ensureCorrectSchema()
 	schema, err := s.adapter.GetTableColumns(s.ctx, tableName)
 	if err != nil {
 		return err
@@ -125,6 +163,7 @@ func (s *Service) SaveChanges(tableName string, changes []RowChange) error {
 }
 
 func (s *Service) DeleteRows(tableName string, rowIDs []string) error {
+	s.ensureCorrectSchema()
 	schema, err := s.adapter.GetTableColumns(s.ctx, tableName)
 	if err != nil {
 		return err
@@ -149,6 +188,7 @@ func (s *Service) DeleteRows(tableName string, rowIDs []string) error {
 }
 
 func (s *Service) AddRow(tableName string, data map[string]any) error {
+	s.ensureCorrectSchema()
 	if len(data) == 0 {
 		return fmt.Errorf("no data provided")
 	}
@@ -233,6 +273,7 @@ func joinColumns(cols []string) string {
 
 // GetSchemaVisualization returns schema for visualization
 func (s *Service) GetSchemaVisualization() (map[string]any, error) {
+	s.ensureCorrectSchema()
 	tables, err := s.adapter.GetCurrentSchema(s.ctx)
 	if err != nil {
 		return nil, err
@@ -333,6 +374,7 @@ func (s *Service) GetSchemaVisualization() (map[string]any, error) {
 
 // ExecuteSQL executes a raw SQL query
 func (s *Service) ExecuteSQL(query string) (*TableData, error) {
+	s.ensureCorrectSchema()
 	query = strings.TrimSpace(query)
 
 	queryUpper := strings.ToUpper(query)
@@ -417,4 +459,76 @@ func (s *Service) InsertRow(table string, data map[string]interface{}) error {
 
 	_, err := s.adapter.ExecuteQuery(s.ctx, sql)
 	return err
+}
+
+func (s *Service) GetBranches() ([]map[string]interface{}, string, error) {
+	cfg, err := config.Load()
+	if err != nil {
+		return nil, "", err
+	}
+
+	manager, err := branch.NewManager(cfg)
+	if err != nil {
+		return nil, "", err
+	}
+	defer manager.Close()
+
+	branches, current, err := manager.ListBranches()
+	if err != nil {
+		return nil, "", err
+	}
+
+	result := make([]map[string]interface{}, len(branches))
+	for i, b := range branches {
+		result[i] = map[string]interface{}{
+			"name":       b.Name,
+			"parent":     b.Parent,
+			"schema":     b.Schema,
+			"created_at": b.CreatedAt,
+			"is_default": b.IsDefault,
+		}
+	}
+
+	return result, current, nil
+}
+
+func (s *Service) SwitchBranch(branchName string) error {
+	cfg, err := config.Load()
+	if err != nil {
+		return err
+	}
+
+	manager, err := branch.NewManager(cfg)
+	if err != nil {
+		return err
+	}
+	defer manager.Close()
+
+	ctx := context.Background()
+	if err := manager.SwitchBranch(ctx, branchName); err != nil {
+		return err
+	}
+
+	branchSchema, err := manager.GetBranchSchema(branchName)
+	if err != nil {
+		return err
+	}
+
+	if cfg.Database.Provider == "postgresql" || cfg.Database.Provider == "postgres" {
+		query := fmt.Sprintf("SET search_path TO %s, public", branchSchema)
+		if _, err := s.adapter.ExecuteQuery(ctx, query); err != nil {
+			return fmt.Errorf("failed to set search_path: %w", err)
+		}
+	} else if cfg.Database.Provider == "mysql" || cfg.Database.Provider == "sqlite" || cfg.Database.Provider == "sqlite3" {
+		type DatabaseSwitcher interface {
+			SwitchDatabase(ctx context.Context, dbName string) error
+		}
+		if switcher, ok := s.adapter.(DatabaseSwitcher); ok {
+			if err := switcher.SwitchDatabase(ctx, branchSchema); err != nil {
+				return fmt.Errorf("failed to switch database: %w", err)
+			}
+		}
+	}
+
+	return nil
 }

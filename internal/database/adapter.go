@@ -23,6 +23,7 @@ type DatabaseAdapter interface {
 	GetAppliedMigrations(ctx context.Context) (map[string]*time.Time, error)
 	RecordMigration(ctx context.Context, migrationID, name, checksum string) error
 	ExecuteMigration(ctx context.Context, migrationSQL string) error
+	ExecuteAndRecordMigration(ctx context.Context, migrationID, name, checksum string, migrationSQL string) error
 	ExecuteQuery(ctx context.Context, query string) (*common.QueryResult, error)
 
 	// Schema operations
@@ -57,6 +58,14 @@ type DatabaseAdapter interface {
 	// Data type mapping
 	MapColumnType(dbType string) string
 	FormatColumnType(column types.SchemaColumn) string
+
+	// Branch operations
+	CreateBranchSchema(ctx context.Context, branchName string) error
+	DropBranchSchema(ctx context.Context, branchName string) error
+	CloneSchemaToBranch(ctx context.Context, sourceSchema, targetSchema string) error
+	GetSchemaForBranch(ctx context.Context, branchSchema string) ([]types.SchemaTable, error)
+	SetActiveSchema(ctx context.Context, schemaName string) error
+	GetTableNamesInSchema(ctx context.Context, schemaName string) ([]string, error)
 }
 
 type DatabaseConnection interface {

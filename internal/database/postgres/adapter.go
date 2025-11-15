@@ -147,6 +147,48 @@ func (p *Adapter) RecordMigration(ctx context.Context, migrationID, name, checks
 	return tx.Commit(ctx)
 }
 
+func (p *Adapter) ExecuteAndRecordMigration(ctx context.Context, migrationID, name, checksum string, migrationSQL string) error {
+	tx, err := p.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	_, err = tx.Exec(ctx, `
+		INSERT INTO _flash_migrations (id, migration_name, checksum, started_at, applied_steps_count)
+		VALUES ($1, $2, $3, NOW(), 0)
+	`, migrationID, name, checksum)
+	if err != nil {
+		return fmt.Errorf("failed to record migration start: %w", err)
+	}
+
+	// Execute the migration SQL
+	if migrationSQL != "" {
+		statements := common.ParseSQLStatements(migrationSQL)
+		for i, stmt := range statements {
+			stmt = strings.TrimSpace(stmt)
+			if stmt == "" {
+				continue
+			}
+			if _, err := tx.Exec(ctx, stmt); err != nil {
+				return fmt.Errorf("failed to execute statement %d: %w", i+1, err)
+			}
+		}
+	}
+
+	// Update the migration record with finished_at
+	_, err = tx.Exec(ctx, `
+		UPDATE _flash_migrations 
+		SET finished_at = NOW(), applied_steps_count = 1
+		WHERE id = $1
+	`, migrationID)
+	if err != nil {
+		return fmt.Errorf("failed to update migration finish time: %w", err)
+	}
+
+	return tx.Commit(ctx)
+}
+
 func (p *Adapter) ExecuteMigration(ctx context.Context, migrationSQL string) error {
 	tx, err := p.pool.Begin(ctx)
 	if err != nil {

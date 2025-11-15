@@ -1,0 +1,19 @@
+{
+  "current": "feature",
+  "branches": [
+    {
+      "name": "main",
+      "parent": "",
+      "schema": "main",
+      "created_at": "2025-11-14T23:30:00Z",
+      "is_default": true
+    },
+    {
+      "name": "feature",
+      "parent": "main",
+      "schema": "feature",
+      "created_at": "2025-11-14T23:43:03.844691136+05:30",
+      "is_default": false
+    }
+  ]
+}

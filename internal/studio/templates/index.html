@@ -57,6 +57,7 @@
             <div class="topbar">
                 <div class="topbar-left">
                     <span class="table-name" id="current-table">Select a model</span>
+                <select id="branch-selector" class="branch-selector" onchange="switchBranch(this.value)" style="margin-left: 16px; padding: 6px 12px; border-radius: 6px; border: 1px solid #333; background: #1a1a1a; color: #e0e0e0; font-size: 14px;"><option value="">Loading...</option></select>
                 </div>
                 <div class="topbar-right">
                     <button id="filter-btn" class="btn btn-filter" onclick="toggleFilters()">

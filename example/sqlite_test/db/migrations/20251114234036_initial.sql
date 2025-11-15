@@ -1,0 +1,14 @@
+-- Migration: initial
+-- Created: 2025-11-14T23:40:36Z
+
+CREATE TABLE IF NOT EXISTS `users` (
+  `id` INTEGER PRIMARY KEY AUTOINCREMENT,
+  `name` TEXT NOT NULL,
+  `email` TEXT UNIQUE NOT NULL
+);
+CREATE TABLE IF NOT EXISTS `posts` (
+  `id` INTEGER PRIMARY KEY AUTOINCREMENT,
+  `user_id` INTEGER NOT NULL,
+  `title` TEXT NOT NULL,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
+);

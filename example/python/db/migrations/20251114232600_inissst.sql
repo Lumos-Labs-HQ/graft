@@ -1,0 +1,9 @@
+-- Migration: inissst
+-- Created: 2025-11-14T23:26:00Z
+
+CREATE TABLE IF NOT EXISTS "hshsh" (
+  "id" SERIAL PRIMARY KEY,
+  "name" VARCHAR(255) NOT NULL,
+  "email" VARCHAR(255) UNIQUE NOT NULL,
+  "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);

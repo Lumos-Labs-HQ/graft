@@ -39,13 +39,22 @@ This command will:
 
 		ctx := context.Background()
 
-		m, err := migrator.NewMigrator(cfg)
+		// Get current branch info
+		branchName, branchSchema, err := migrator.GetCurrentBranchInfo(cfg)
+		if err == nil && branchName != "main" {
+			fmt.Printf("📍 Applying migrations to branch: %s (schema: %s)\n", branchName, branchSchema)
+		}
+
+		bam, err := migrator.NewBranchAwareMigrator(cfg)
 		if err != nil {
 			return fmt.Errorf("failed to create migrator: %w", err)
 		}
-		defer m.Close()
+		defer bam.Close()
 
-		return m.Apply(ctx, "", cfg.SchemaPath)
+		force, _ := cmd.Flags().GetBool("force")
+		bam.SetForce(force)
+
+		return bam.Apply(ctx, "", cfg.SchemaPath)
 	},
 }
 

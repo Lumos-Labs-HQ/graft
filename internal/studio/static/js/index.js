@@ -209,3 +209,53 @@ function filterIndexItems() {
 function showCreateTableForm() {
     window.location.href = '/schema#create-table';
 }
+
+// Branch Management
+async function loadBranches() {
+    try {
+        const response = await fetch('/api/branches');
+        const data = await response.json();
+        
+        const selector = document.getElementById('branch-selector');
+        selector.innerHTML = '';
+        
+        data.branches.forEach(branch => {
+            const option = document.createElement('option');
+            option.value = branch.name;
+            option.textContent = `${branch.name}${branch.is_default ? ' (default)' : ''}`;
+            if (branch.name === data.current) {
+                option.selected = true;
+            }
+            selector.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Failed to load branches:', error);
+    }
+}
+
+async function switchBranch(branchName) {
+    if (!branchName) return;
+    
+    try {
+        const response = await fetch('/api/branches/switch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ branch: branchName })
+        });
+        
+        if (response.ok) {
+            showNotification(`Switched to branch: ${branchName}`, 'success');
+            location.reload(); // Reload to show data from new branch
+        } else {
+            showNotification('Failed to switch branch', 'error');
+        }
+    } catch (error) {
+        console.error('Failed to switch branch:', error);
+        showNotification('Failed to switch branch', 'error');
+    }
+}
+
+// Load branches on page load
+document.addEventListener('DOMContentLoaded', () => {
+    loadBranches();
+});

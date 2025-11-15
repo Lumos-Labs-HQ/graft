@@ -128,7 +128,14 @@ func (m *Migrator) generateSQLFromDiff(diff *types.SchemaDiff, name string) stri
 		for i, v := range enum.Values {
 			values[i] = fmt.Sprintf("'%s'", v)
 		}
-		upStatements = append(upStatements, fmt.Sprintf("CREATE TYPE \"%s\" AS ENUM (%s);", enum.Name, strings.Join(values, ", ")))
+		// Use DO block to check if ENUM exists before creating
+		enumSQL := fmt.Sprintf(`DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = '%s') THEN
+        CREATE TYPE "%s" AS ENUM (%s);
+    END IF;
+END $$;`, enum.Name, enum.Name, strings.Join(values, ", "))
+		upStatements = append(upStatements, enumSQL)
 	}
 
 	// Generate UP migration only

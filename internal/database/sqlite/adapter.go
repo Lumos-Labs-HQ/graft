@@ -13,8 +13,10 @@ import (
 )
 
 type Adapter struct {
-	db *sql.DB
-	qb squirrel.StatementBuilderType
+	db           *sql.DB
+	qb           squirrel.StatementBuilderType
+	originalPath string
+	currentPath  string
 }
 
 var typeMap = map[string]string{
@@ -38,6 +40,13 @@ func (s *Adapter) Connect(ctx context.Context, url string) error {
 		dbPath += "?cache=shared&_journal_mode=WAL"
 	}
 
+	// Store original path without query parameters
+	s.originalPath = strings.TrimPrefix(url, "sqlite://")
+	if idx := strings.Index(s.originalPath, "?"); idx > 0 {
+		s.originalPath = s.originalPath[:idx]
+	}
+	s.currentPath = s.originalPath
+
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		return fmt.Errorf("failed to open SQLite connection: %w", err)
@@ -56,6 +65,37 @@ func (s *Adapter) Close() error {
 	if s.db != nil {
 		return s.db.Close()
 	}
+	return nil
+}
+
+func (s *Adapter) SwitchDatabase(ctx context.Context, branchFile string) error {
+	if s.currentPath == branchFile {
+		return nil // Already on this file
+	}
+
+	// Close existing connection
+	if s.db != nil {
+		s.db.Close()
+	}
+
+	// Open new database file
+	dbPath := branchFile
+	if !strings.Contains(dbPath, "?") {
+		dbPath += "?cache=shared&_journal_mode=WAL"
+	}
+
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		return fmt.Errorf("failed to switch to database %s: %w", branchFile, err)
+	}
+
+	db.SetMaxOpenConns(10)
+	db.SetMaxIdleConns(5)
+	db.SetConnMaxLifetime(0)
+	db.SetConnMaxIdleTime(5 * time.Minute)
+
+	s.db = db
+	s.currentPath = branchFile
 	return nil
 }
 
@@ -137,6 +177,49 @@ func (s *Adapter) RecordMigration(ctx context.Context, migrationID, name, checks
 	if err != nil {
 		return err
 	}
+	return tx.Commit()
+}
+
+func (s *Adapter) ExecuteAndRecordMigration(ctx context.Context, migrationID, name, checksum string, migrationSQL string) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// First, record the migration with started_at only
+	_, err = tx.ExecContext(ctx, `
+		INSERT INTO _flash_migrations (id, migration_name, checksum, started_at, applied_steps_count)
+		VALUES (?, ?, ?, CURRENT_TIMESTAMP, 0)
+	`, migrationID, name, checksum)
+	if err != nil {
+		return fmt.Errorf("failed to record migration start: %w", err)
+	}
+
+	// Execute the migration SQL
+	if migrationSQL != "" {
+		statements := common.ParseSQLStatements(migrationSQL)
+		for i, stmt := range statements {
+			stmt = strings.TrimSpace(stmt)
+			if stmt == "" {
+				continue
+			}
+			if _, err := tx.ExecContext(ctx, stmt); err != nil {
+				return fmt.Errorf("failed to execute statement %d: %w", i+1, err)
+			}
+		}
+	}
+
+	// Update the migration record with finished_at
+	_, err = tx.ExecContext(ctx, `
+		UPDATE _flash_migrations 
+		SET finished_at = CURRENT_TIMESTAMP, applied_steps_count = 1
+		WHERE id = ?
+	`, migrationID)
+	if err != nil {
+		return fmt.Errorf("failed to update migration finish time: %w", err)
+	}
+
 	return tx.Commit()
 }
 

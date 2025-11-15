@@ -11,6 +11,7 @@ import (
 
 	"github.com/Lumos-Labs-HQ/flash/internal/config"
 	"github.com/Lumos-Labs-HQ/flash/internal/database"
+	"github.com/Lumos-Labs-HQ/flash/internal/branch"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/filesystem"
 	"github.com/gofiber/template/html/v2"
@@ -30,8 +31,21 @@ func NewServer(cfg *config.Config, port int) *Server {
 		panic(fmt.Sprintf("Failed to get database URL: %v", err))
 	}
 
+	// Use embedded templates
 	if err := adapter.Connect(context.Background(), dbURL); err != nil {
 		panic(fmt.Sprintf("Failed to connect to database: %v", err))
+	}
+
+	ctx := context.Background()
+	branchMgr := branch.NewMetadataManager(cfg.MigrationsPath)
+	if store, err := branchMgr.Load(); err == nil {
+		if currentBranch := store.GetBranch(store.Current); currentBranch != nil {
+			if cfg.Database.Provider == "postgresql" || cfg.Database.Provider == "postgres" {
+				query := fmt.Sprintf("SET search_path TO %s, public", currentBranch.Schema)
+				adapter.ExecuteQuery(ctx, query)
+				fmt.Printf("🔧 Studio using schema: %s (branch: %s)\n", currentBranch.Schema, currentBranch.Name)
+			}
+		}
 	}
 
 	// Use embedded templates
@@ -79,6 +93,10 @@ func (s *Server) setupRoutes() {
 	api.Get("/config/check", s.handleCheckConfig)
 	api.Put("/tables/:name/rows/:id", s.handleUpdateRow)
 	api.Post("/tables/:name/rows", s.handleInsertRow)
+
+	// Branch API
+	api.Get("/branches", s.handleGetBranches)
+	api.Post("/branches/switch", s.handleSwitchBranch)
 }
 
 func (s *Server) Start(openBrowser bool) error {

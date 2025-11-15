@@ -364,7 +364,7 @@ func (p *Adapter) GetTableIndexes(ctx context.Context, tableName string) ([]type
 func (p *Adapter) GetAllTableNames(ctx context.Context) ([]string, error) {
 	rows, err := p.pool.Query(ctx, `
 		SELECT table_name FROM information_schema.tables 
-		WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+		WHERE table_schema = current_schema() AND table_type = 'BASE TABLE'
 		ORDER BY table_name
 	`)
 	if err != nil {

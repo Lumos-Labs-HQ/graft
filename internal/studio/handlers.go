@@ -92,3 +92,36 @@ func (s *Server) handleCheckConfig(c *fiber.Ctx) error {
 		"exists": exists,
 	})
 }
+
+
+func (s *Server) handleGetBranches(c *fiber.Ctx) error {
+	branches, current, err := s.service.GetBranches()
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(fiber.Map{
+		"branches": branches,
+		"current":  current,
+	})
+}
+
+// handleSwitchBranch switches to a different branch
+func (s *Server) handleSwitchBranch(c *fiber.Ctx) error {
+	var req struct {
+		Branch string `json:"branch"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
+	}
+
+	if err := s.service.SwitchBranch(req.Branch); err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	
+	return c.JSON(fiber.Map{
+		"success": true,
+		"message": "Branch switched. Please refresh the page to see changes.",
+	})
+}

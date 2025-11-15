@@ -1,0 +1,33 @@
+{
+  "current": "rrrgo",
+  "branches": [
+    {
+      "name": "main",
+      "parent": "",
+      "schema": "public",
+      "created_at": "2025-11-14T23:17:42.0830808+05:30",
+      "is_default": true
+    },
+    {
+      "name": "tes",
+      "parent": "main",
+      "schema": "flash_branch_tes",
+      "created_at": "2025-11-14T23:17:47.0286148+05:30",
+      "is_default": false
+    },
+    {
+      "name": "text",
+      "parent": "main",
+      "schema": "flash_branch_text",
+      "created_at": "2025-11-15T15:09:39.7125601+05:30",
+      "is_default": false
+    },
+    {
+      "name": "rrrgo",
+      "parent": "text",
+      "schema": "flash_branch_fuck",
+      "created_at": "2025-11-15T15:46:56.868902+05:30",
+      "is_default": false
+    }
+  ]
+}

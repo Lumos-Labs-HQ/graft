@@ -206,11 +206,12 @@ func (m *Adapter) GenerateDropIndexSQL(indexName string) string {
 
 func (m *Adapter) FormatColumnType(column types.SchemaColumn) string {
 	var parts []string
-	parts = append(parts, column.Type)
+	columnType := m.convertTypeToMySQL(column.Type)
+	parts = append(parts, columnType)
 
 	if column.IsPrimary {
 		parts = append(parts, "PRIMARY KEY")
-		if strings.Contains(strings.ToUpper(column.Type), "INT") {
+		if strings.Contains(strings.ToUpper(columnType), "INT") {
 			parts = append(parts, "AUTO_INCREMENT")
 		}
 	}
@@ -225,7 +226,7 @@ func (m *Adapter) FormatColumnType(column types.SchemaColumn) string {
 
 	if column.Default != "" {
 		defaultValue := column.Default
-		if strings.HasPrefix(strings.ToUpper(column.Type), "ENUM(") {
+		if strings.HasPrefix(strings.ToUpper(columnType), "ENUM(") {
 			trimmed := strings.TrimSpace(defaultValue)
 			if !strings.HasPrefix(trimmed, "'") && !strings.HasPrefix(trimmed, "\"") &&
 				!strings.EqualFold(trimmed, "NULL") && !strings.EqualFold(trimmed, "CURRENT_TIMESTAMP") {
@@ -236,4 +237,29 @@ func (m *Adapter) FormatColumnType(column types.SchemaColumn) string {
 	}
 
 	return strings.Join(parts, " ")
+}
+
+
+func (m *Adapter) convertTypeToMySQL(pgType string) string {
+	upperType := strings.ToUpper(pgType)
+	
+	if upperType == "SERIAL" {
+		return "INT"
+	}
+	if upperType == "BIGSERIAL" {
+		return "BIGINT"
+	}
+	if upperType == "SMALLSERIAL" {
+		return "SMALLINT"
+	}
+	
+	if strings.Contains(upperType, "TIMESTAMP WITH TIME ZONE") || strings.Contains(upperType, "TIMESTAMPTZ") {
+		return "TIMESTAMP"
+	}
+	
+	if upperType == "BOOLEAN" || upperType == "BOOL" {
+		return "TINYINT(1)"
+	}
+	
+	return pgType
 }
