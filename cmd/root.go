@@ -18,7 +18,7 @@ import (
 var (
 	cfgFile string
 	envName string
-	Version = "2.8.22"
+	Version = "2.8.23"
 )
 
 func showBanner() {
