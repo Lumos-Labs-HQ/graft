@@ -150,7 +150,7 @@ func (s *Service) parseExistingSchemaFiles(files map[string]string) (map[string]
 	var enums []string
 
 	for fileName, content := range files {
-		for _, line := range strings.Split(content, "\n") {
+		for line := range strings.SplitSeq(content, "\n") {
 			trimmed := strings.TrimSpace(line)
 			stripped := strings.TrimSpace(strings.TrimPrefix(trimmed, "--"))
 			if m := pullCreateTableRegex.FindStringSubmatch(stripped); len(m) > 1 {

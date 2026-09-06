@@ -108,18 +108,18 @@ func (p *Adapter) parseIndexDef(indexName, tableName, indexDef string) types.Sch
 		index.Unique = true
 	}
 
-	if idx := strings.Index(indexDef, "("); idx != -1 {
-		colsStr := indexDef[idx+1:]
+	if _, after, ok := strings.Cut(indexDef, "("); ok {
+		colsStr := after
 		if endIdx := strings.LastIndex(colsStr, ")"); endIdx != -1 {
 			colsStr = colsStr[:endIdx]
 		}
-		cols := strings.Split(colsStr, ",")
-		for _, col := range cols {
+		cols := strings.SplitSeq(colsStr, ",")
+		for col := range cols {
 			col = strings.TrimSpace(col)
-			if strings.HasSuffix(col, " DESC") {
-				col = strings.TrimSuffix(col, " DESC")
-			} else if strings.HasSuffix(col, " ASC") {
-				col = strings.TrimSuffix(col, " ASC")
+			if before, ok := strings.CutSuffix(col, " DESC"); ok {
+				col = before
+			} else if before, ok := strings.CutSuffix(col, " ASC"); ok {
+				col = before
 			}
 			if col != "" {
 				index.Columns = append(index.Columns, col)
@@ -399,13 +399,13 @@ func (p *Adapter) GetAllTablesIndexes(ctx context.Context, tableNames []string) 
 			if endIdx := strings.LastIndex(colsStr, ")"); endIdx != -1 {
 				colsStr = colsStr[:endIdx]
 			}
-			cols := strings.Split(colsStr, ",")
-			for _, col := range cols {
+			cols := strings.SplitSeq(colsStr, ",")
+			for col := range cols {
 				col = strings.TrimSpace(col)
-				if strings.HasSuffix(col, " DESC") {
-					col = strings.TrimSuffix(col, " DESC")
-				} else if strings.HasSuffix(col, " ASC") {
-					col = strings.TrimSuffix(col, " ASC")
+				if before, ok := strings.CutSuffix(col, " DESC"); ok {
+					col = before
+				} else if before, ok := strings.CutSuffix(col, " ASC"); ok {
+					col = before
 				}
 				if col != "" {
 					index.Columns = append(index.Columns, col)
@@ -746,8 +746,8 @@ func (p *Adapter) cleanDefaultValue(defaultVal string) string {
 		return ""
 	}
 
-	if idx := strings.Index(defaultVal, "::"); idx != -1 {
-		value := strings.TrimSpace(defaultVal[:idx])
+	if before, _, ok := strings.Cut(defaultVal, "::"); ok {
+		value := strings.TrimSpace(before)
 
 		if strings.Contains(strings.ToLower(value), "nextval") {
 			return ""

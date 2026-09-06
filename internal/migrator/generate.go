@@ -76,9 +76,9 @@ func (m *Migrator) generateSQLFromDiff(diff *types.SchemaDiff, name string) (str
 		case "scylla", "scylladb", "cassandra":
 			// ScyllaDB uses keyspace-qualified names (ks.table). If the name
 			// already has a dot, quote each part separately.
-			if idx := strings.Index(tableName, "."); idx >= 0 {
-				ks := strings.TrimSpace(tableName[:idx])
-				tbl := strings.TrimSpace(tableName[idx+1:])
+			if before, after, ok := strings.Cut(tableName, "."); ok {
+				ks := strings.TrimSpace(before)
+				tbl := strings.TrimSpace(after)
 				return fmt.Sprintf(`DROP TABLE IF EXISTS "%s"."%s";`, strings.Trim(ks, `"`), strings.Trim(tbl, `"`))
 			}
 			return fmt.Sprintf(`DROP TABLE IF EXISTS "%s"."%s";`, m.adapter.QuoteIdentifier(tableName), tableName)

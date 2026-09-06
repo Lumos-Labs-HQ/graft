@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"slices"
 	"strings"
 	"sync"
 
@@ -64,10 +65,7 @@ func (p *QueryParser) parseFilesConcurrently(files []string, schema *Schema) ([]
 	indexedSchema := NewIndexedSchema(schema)
 
 	// Determine optimal worker count (don't exceed CPU count or file count)
-	numWorkers := runtime.NumCPU()
-	if numWorkers > len(files) {
-		numWorkers = len(files)
-	}
+	numWorkers := min(runtime.NumCPU(), len(files))
 	if numWorkers < 1 {
 		numWorkers = 1
 	}
@@ -85,9 +83,7 @@ func (p *QueryParser) parseFilesConcurrently(files []string, schema *Schema) ([]
 	// Launch worker goroutines
 	var wg sync.WaitGroup
 	for i := 0; i < numWorkers; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			for file := range fileChan {
 				queries, err := p.parseQueryFile(file, indexedSchema.Schema)
 				resultChan <- parseResult{
@@ -96,7 +92,7 @@ func (p *QueryParser) parseFilesConcurrently(files []string, schema *Schema) ([]
 					file:    file,
 				}
 			}
-		}()
+		})
 	}
 
 	// Send files to workers
@@ -163,11 +159,11 @@ func (p *QueryParser) parseQueryFile(filename string, schema *Schema) ([]*Query,
 				queries = append(queries, currentQuery)
 			}
 
-			nameStart := strings.Index(line, "name")
-			if nameStart == -1 {
+			_, after, ok := strings.Cut(line, "name")
+			if !ok {
 				continue
 			}
-			remainder := line[nameStart+4:]
+			remainder := after
 			remainder = strings.TrimLeft(remainder, " :")
 
 			parts := strings.Fields(remainder)
@@ -185,14 +181,14 @@ func (p *QueryParser) parseQueryFile(filename string, schema *Schema) ([]*Query,
 				pendingJsonTypes = nil
 				pendingCache = nil
 			}
-		} else if strings.HasPrefix(line, "-- @required:") {
-			val := strings.TrimPrefix(line, "-- @required:")
+		} else if after, ok := strings.CutPrefix(line, "-- @required:"); ok {
+			val := after
 			val = strings.TrimSpace(val)
 			var cols []string
 			if val == "*" {
 				cols = []string{"*"}
 			} else {
-				for _, col := range strings.Split(val, ",") {
+				for col := range strings.SplitSeq(val, ",") {
 					col = strings.TrimSpace(col)
 					if col != "" {
 						cols = append(cols, col)
@@ -232,8 +228,8 @@ func (p *QueryParser) parseQueryFile(filename string, schema *Schema) ([]*Query,
 			} else {
 				pendingCache = cd
 			}
-		} else if strings.HasPrefix(line, "--") {
-			comment = strings.TrimPrefix(line, "--")
+		} else if after, ok := strings.CutPrefix(line, "--"); ok {
+			comment = after
 			comment = strings.TrimSpace(comment)
 		} else if currentQuery != nil {
 			sqlLines = append(sqlLines, line)
@@ -317,8 +313,7 @@ func (p *QueryParser) analyzeQuery(query *Query, schema *Schema) error {
 	// Fallback: strip keyspace prefix and retry.
 	// e.g. query says "myapp.users" but schema has "users" (ScyllaDB single-keyspace mode)
 	if table == nil && tableName != "" {
-		if dotIdx := strings.LastIndex(tableName, "."); dotIdx >= 0 {
-			stripped := tableName[dotIdx+1:]
+		if _, stripped, ok := strings.CutLast(tableName, "."); ok {
 			for _, t := range schema.Tables {
 				if strings.EqualFold(t.Name, stripped) {
 					table = t
@@ -459,12 +454,12 @@ func (p *QueryParser) analyzeQuery(query *Query, schema *Schema) error {
 						validMatch := -1
 						colNameUpper := strings.ToUpper(colName)
 
-						for i := len(allMatches) - 1; i >= 0; i-- {
-							asPos := allMatches[i][0]
+						for i, allMatche := range slices.Backward(allMatches) {
+							asPos := allMatche[0]
 							parenDepth := 0
 							caseDepth := 0
 
-							for j := 0; j < asPos; j++ {
+							for j := range asPos {
 								switch colName[j] {
 								case '(':
 									parenDepth++

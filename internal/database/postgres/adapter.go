@@ -48,10 +48,7 @@ func (p *Adapter) Connect(ctx context.Context, url string) error {
 
 	config.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeExec
 
-	config.MaxConns = int32(runtime.GOMAXPROCS(0) * 2)
-	if config.MaxConns < 4 {
-		config.MaxConns = 4
-	}
+	config.MaxConns = max(int32(runtime.GOMAXPROCS(0)*2), 4)
 	config.MinConns = 0
 	config.MaxConnLifetime = 30 * time.Minute
 	config.MaxConnIdleTime = 5 * time.Minute
@@ -248,14 +245,14 @@ func (p *Adapter) ExecuteQuery(ctx context.Context, query string) (*common.Query
 		columns[i] = string(fd.Name)
 	}
 
-	results := make([]map[string]interface{}, 0, 64)
+	results := make([]map[string]any, 0, 64)
 	for rows.Next() {
 		values, err := rows.Values()
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
 
-		row := make(map[string]interface{}, len(columns))
+		row := make(map[string]any, len(columns))
 		for i, col := range columns {
 			row[col] = values[i]
 		}
@@ -272,7 +269,7 @@ func (p *Adapter) ExecuteQuery(ctx context.Context, query string) (*common.Query
 	}, nil
 }
 
-func (p *Adapter) ExecuteQueryWithArgs(ctx context.Context, query string, args ...interface{}) (*common.QueryResult, error) {
+func (p *Adapter) ExecuteQueryWithArgs(ctx context.Context, query string, args ...any) (*common.QueryResult, error) {
 	rows, err := p.pool.Query(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute query: %w", err)
@@ -285,14 +282,14 @@ func (p *Adapter) ExecuteQueryWithArgs(ctx context.Context, query string, args .
 		columns[i] = string(fd.Name)
 	}
 
-	results := make([]map[string]interface{}, 0, 64)
+	results := make([]map[string]any, 0, 64)
 	for rows.Next() {
 		values, err := rows.Values()
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
 
-		row := make(map[string]interface{}, len(columns))
+		row := make(map[string]any, len(columns))
 		for i, col := range columns {
 			row[col] = values[i]
 		}
@@ -309,7 +306,7 @@ func (p *Adapter) ExecuteQueryWithArgs(ctx context.Context, query string, args .
 	}, nil
 }
 
-func (p *Adapter) ExecuteDMLWithArgs(ctx context.Context, query string, args ...interface{}) error {
+func (p *Adapter) ExecuteDMLWithArgs(ctx context.Context, query string, args ...any) error {
 	_, err := p.pool.Exec(ctx, query, args...)
 	return err
 }

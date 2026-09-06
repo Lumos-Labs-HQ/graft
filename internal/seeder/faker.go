@@ -35,12 +35,12 @@ type FakeData struct {
 
 type patternEntry struct {
 	keywords  []string
-	generator func() interface{}
+	generator func() any
 }
 
 type typeEntry struct {
 	match     string
-	generator func() interface{}
+	generator func() any
 }
 
 type DataGenerator struct {
@@ -67,7 +67,7 @@ func NewDataGenerator() (*DataGenerator, error) {
 }
 
 func (g *DataGenerator) initPatterns() {
-	rawPatterns := map[string]func() interface{}{
+	rawPatterns := map[string]func() any{
 		// Identity
 		"first_name|firstname|fname":                              g.randomFrom(g.fakeData.FirstNames, "John"),
 		"last_name|lastname|lname":                                g.randomFrom(g.fakeData.LastNames, "Doe"),
@@ -96,8 +96,8 @@ func (g *DataGenerator) initPatterns() {
 		"state|province|region": g.randomFrom(g.fakeData.States, "California"),
 		"zip|postal|postcode":   g.generateZip,
 		"country|nation":        g.randomFrom([]string{"US", "CA", "GB", "DE", "FR", "JP", "AU", "BR", "IN", "MX"}, "US"),
-		"latitude|lat":          func() interface{} { return float64(g.rand.Intn(180000)-90000) / 1000.0 },
-		"longitude|lng|lon":     func() interface{} { return float64(g.rand.Intn(360000)-180000) / 1000.0 },
+		"latitude|lat":          func() any { return float64(g.rand.Intn(180000)-90000) / 1000.0 },
+		"longitude|lng|lon":     func() any { return float64(g.rand.Intn(360000)-180000) / 1000.0 },
 
 		// Business
 		"company|organization|org|firm": g.randomFrom(g.fakeData.Companies, "Tech Company Inc"),
@@ -114,32 +114,32 @@ func (g *DataGenerator) initPatterns() {
 		"ip|ip_address|remote_addr":            g.generateIP,
 		"locale|lang|language":                 g.randomFrom([]string{"en", "es", "fr", "de", "ja", "zh", "pt", "it", "ko", "ru"}, "en"),
 		"currency|curr":                        g.randomFrom([]string{"USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "CNY"}, "USD"),
-		"metadata|meta|extra|attrs|properties": func() interface{} { return `{"generated": true}` },
+		"metadata|meta|extra|attrs|properties": func() any { return `{"generated": true}` },
 		"hash|checksum|md5|sha|sha256|digest":  g.generateHash,
 		"code|short_code|reference|ref_no":     g.generateRefCode,
-		"version|ver":                          func() interface{} { return fmt.Sprintf("%d.%d.%d", g.rand.Intn(5), g.rand.Intn(20), g.rand.Intn(20)) },
+		"version|ver":                          func() any { return fmt.Sprintf("%d.%d.%d", g.rand.Intn(5), g.rand.Intn(20), g.rand.Intn(20)) },
 
 		// Temporal
-		"dob|birth_date|birthdate|date_of_birth": func() interface{} {
+		"dob|birth_date|birthdate|date_of_birth": func() any {
 			return time.Now().AddDate(-18-g.rand.Intn(60), -g.rand.Intn(12), -g.rand.Intn(28))
 		},
-		"age":                      func() interface{} { return g.rand.Intn(80) + 18 },
-		"duration|elapsed|timeout": func() interface{} { return g.rand.Intn(3600) + 1 },
-		"sort_order|display_order|position|rank|seq|sequence": func() interface{} { return g.rand.Intn(1000) },
+		"age":                      func() any { return g.rand.Intn(80) + 18 },
+		"duration|elapsed|timeout": func() any { return g.rand.Intn(3600) + 1 },
+		"sort_order|display_order|position|rank|seq|sequence": func() any { return g.rand.Intn(1000) },
 
 		// Numeric / Finance
-		"price|amount|cost|fee|charge|salary|wage": func() interface{} { return float64(g.rand.Intn(1000000)) / 100.0 },
-		"quantity|qty|stock|inventory|count":       func() interface{} { return g.rand.Intn(1000) + 1 },
-		"rating|score|stars|grade":                 func() interface{} { return g.rand.Intn(5) + 1 },
-		"percent|percentage|pct|rate|ratio":        func() interface{} { return float64(g.rand.Intn(10000)) / 100.0 },
-		"progress|completion|completion_rate":      func() interface{} { return g.rand.Intn(101) },
-		"size|file_size|bytes|length|width|height": func() interface{} { return g.rand.Intn(104857600) + 1024 },
+		"price|amount|cost|fee|charge|salary|wage": func() any { return float64(g.rand.Intn(1000000)) / 100.0 },
+		"quantity|qty|stock|inventory|count":       func() any { return g.rand.Intn(1000) + 1 },
+		"rating|score|stars|grade":                 func() any { return g.rand.Intn(5) + 1 },
+		"percent|percentage|pct|rate|ratio":        func() any { return float64(g.rand.Intn(10000)) / 100.0 },
+		"progress|completion|completion_rate":      func() any { return g.rand.Intn(101) },
+		"size|file_size|bytes|length|width|height": func() any { return g.rand.Intn(104857600) + 1024 },
 
 		// Boolean states (not prefixes — those are handled separately)
-		"active|enabled|verified|confirmed|published|visible|deleted|archived|disabled|locked|banned|approved|featured|premium|subscribed|notify|subscribe|public|private|read_only|readonly|mandatory|required|optional|default|highlighted": func() interface{} { return g.rand.Intn(2) == 1 },
+		"active|enabled|verified|confirmed|published|visible|deleted|archived|disabled|locked|banned|approved|featured|premium|subscribed|notify|subscribe|public|private|read_only|readonly|mandatory|required|optional|default|highlighted": func() any { return g.rand.Intn(2) == 1 },
 
 		// Security — Documents always NULL
-		"document|doc|file|attachment|pdf|upload": func() interface{} { return nil },
+		"document|doc|file|attachment|pdf|upload": func() any { return nil },
 	}
 
 	g.patternList = make([]patternEntry, 0, len(rawPatterns))
@@ -153,15 +153,15 @@ func (g *DataGenerator) initPatterns() {
 
 func (g *DataGenerator) initTypeList() {
 	g.typeList = []typeEntry{
-		{"BIGINT", func() interface{} { return int64(g.rand.Intn(9000000) + 1) }},
-		{"INT", func() interface{} { return g.rand.Intn(1000000) + 1 }},
-		{"SMALLINT", func() interface{} { return g.rand.Intn(32767) + 1 }},
-		{"TINYINT", func() interface{} { return g.rand.Intn(127) + 1 }},
-		{"MEDIUMINT", func() interface{} { return g.rand.Intn(8388607) + 1 }},
-		{"SERIAL", func() interface{} { return g.rand.Intn(1000000) + 1 }},
-		{"VARCHAR", func() interface{} { return g.randomSentence() }},
-		{"TEXT", func() interface{} { return g.randomSentence() }},
-		{"CHAR", func() interface{} {
+		{"BIGINT", func() any { return int64(g.rand.Intn(9000000) + 1) }},
+		{"INT", func() any { return g.rand.Intn(1000000) + 1 }},
+		{"SMALLINT", func() any { return g.rand.Intn(32767) + 1 }},
+		{"TINYINT", func() any { return g.rand.Intn(127) + 1 }},
+		{"MEDIUMINT", func() any { return g.rand.Intn(8388607) + 1 }},
+		{"SERIAL", func() any { return g.rand.Intn(1000000) + 1 }},
+		{"VARCHAR", func() any { return g.randomSentence() }},
+		{"TEXT", func() any { return g.randomSentence() }},
+		{"CHAR", func() any {
 			chars := "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 			b := make([]byte, 6)
 			for i := range b {
@@ -169,28 +169,28 @@ func (g *DataGenerator) initTypeList() {
 			}
 			return string(b)
 		}},
-		{"BOOL", func() interface{} { return g.rand.Intn(2) == 1 }},
-		{"TIMESTAMPTZ", func() interface{} { return time.Now().AddDate(0, 0, -g.rand.Intn(365)) }},
-		{"TIMESTAMP", func() interface{} { return time.Now().AddDate(0, 0, -g.rand.Intn(365)) }},
-		{"DATETIME", func() interface{} { return time.Now().AddDate(0, 0, -g.rand.Intn(365)) }},
-		{"DATE", func() interface{} { return time.Now().AddDate(0, 0, -g.rand.Intn(365)) }},
-		{"TIME", func() interface{} {
+		{"BOOL", func() any { return g.rand.Intn(2) == 1 }},
+		{"TIMESTAMPTZ", func() any { return time.Now().AddDate(0, 0, -g.rand.Intn(365)) }},
+		{"TIMESTAMP", func() any { return time.Now().AddDate(0, 0, -g.rand.Intn(365)) }},
+		{"DATETIME", func() any { return time.Now().AddDate(0, 0, -g.rand.Intn(365)) }},
+		{"DATE", func() any { return time.Now().AddDate(0, 0, -g.rand.Intn(365)) }},
+		{"TIME", func() any {
 			return fmt.Sprintf("%02d:%02d:%02d", g.rand.Intn(24), g.rand.Intn(60), g.rand.Intn(60))
 		}},
-		{"YEAR", func() interface{} { return 2000 + g.rand.Intn(25) }},
-		{"DECIMAL", func() interface{} { return float64(g.rand.Intn(1000000)) / 100.0 }},
-		{"NUMERIC", func() interface{} { return float64(g.rand.Intn(1000000)) / 100.0 }},
-		{"FLOAT", func() interface{} { return float64(g.rand.Intn(1000000)) / 100.0 }},
-		{"REAL", func() interface{} { return float64(g.rand.Intn(1000000)) / 100.0 }},
-		{"DOUBLE", func() interface{} { return float64(g.rand.Intn(1000000)) / 100.0 }},
-		{"UUID", func() interface{} { return g.generateUUID() }},
-		{"JSONB", func() interface{} { return `{"generated": true}` }},
-		{"JSON", func() interface{} { return `{"generated": true}` }},
-		{"BYTEA", func() interface{} { return []byte("generated binary data") }},
-		{"BLOB", func() interface{} { return []byte("generated binary data") }},
-		{"BINARY", func() interface{} { return []byte("generated binary data") }},
-		{"ARRAY", func() interface{} { return "{item1,item2,item3}" }},
-		{"ENUM", func() interface{} { return "option_a" }},
+		{"YEAR", func() any { return 2000 + g.rand.Intn(25) }},
+		{"DECIMAL", func() any { return float64(g.rand.Intn(1000000)) / 100.0 }},
+		{"NUMERIC", func() any { return float64(g.rand.Intn(1000000)) / 100.0 }},
+		{"FLOAT", func() any { return float64(g.rand.Intn(1000000)) / 100.0 }},
+		{"REAL", func() any { return float64(g.rand.Intn(1000000)) / 100.0 }},
+		{"DOUBLE", func() any { return float64(g.rand.Intn(1000000)) / 100.0 }},
+		{"UUID", func() any { return g.generateUUID() }},
+		{"JSONB", func() any { return `{"generated": true}` }},
+		{"JSON", func() any { return `{"generated": true}` }},
+		{"BYTEA", func() any { return []byte("generated binary data") }},
+		{"BLOB", func() any { return []byte("generated binary data") }},
+		{"BINARY", func() any { return []byte("generated binary data") }},
+		{"ARRAY", func() any { return "{item1,item2,item3}" }},
+		{"ENUM", func() any { return "option_a" }},
 	}
 }
 
@@ -220,7 +220,7 @@ func columnMatches(colLower, keyword string) bool {
 	return false
 }
 
-func (g *DataGenerator) GenerateForColumn(colName, colType string, nullable bool, enumTypes map[string][]string) interface{} {
+func (g *DataGenerator) GenerateForColumn(colName, colType string, nullable bool, enumTypes map[string][]string) any {
 	if nullable && g.rand.Intn(10) < 2 {
 		return nil
 	}
@@ -243,7 +243,7 @@ func (g *DataGenerator) GenerateForColumn(colName, colType string, nullable bool
 	}
 
 	// Find the best matching pattern (longest keyword wins for specificity)
-	var bestGen func() interface{}
+	var bestGen func() any
 	bestLen := 0
 	for _, entry := range g.patternList {
 		for _, keyword := range entry.keywords {
@@ -277,7 +277,7 @@ func parseEnumValues(colType string) []string {
 	return vals
 }
 
-func (g *DataGenerator) Generate(colType string, nullable bool) interface{} {
+func (g *DataGenerator) Generate(colType string, nullable bool) any {
 	if nullable && g.rand.Intn(10) < 2 {
 		return nil
 	}
@@ -301,8 +301,8 @@ func (g *DataGenerator) Generate(colType string, nullable bool) interface{} {
 	return g.randomSentence()
 }
 
-func (g *DataGenerator) randomFrom(slice []string, fallback string) func() interface{} {
-	return func() interface{} {
+func (g *DataGenerator) randomFrom(slice []string, fallback string) func() any {
+	return func() any {
 		if len(slice) == 0 {
 			return fallback
 		}
@@ -317,7 +317,7 @@ func (g *DataGenerator) randomSentence() string {
 	return g.fakeData.Sentences[g.rand.Intn(len(g.fakeData.Sentences))]
 }
 
-func (g *DataGenerator) generateEmail() interface{} {
+func (g *DataGenerator) generateEmail() any {
 	g.counter++
 	if len(g.fakeData.FirstNames) == 0 || len(g.fakeData.LastNames) == 0 || len(g.fakeData.Domains) == 0 {
 		return fmt.Sprintf("user%d@example.com", g.counter)
@@ -328,14 +328,14 @@ func (g *DataGenerator) generateEmail() interface{} {
 	return fmt.Sprintf("%s.%s%d@%s", first, last, g.counter, domain)
 }
 
-func (g *DataGenerator) generateUsername() interface{} {
+func (g *DataGenerator) generateUsername() any {
 	g.counter++
 	first := strings.ToLower(g.randomFrom(g.fakeData.FirstNames, "user")().(string))
 	last := strings.ToLower(g.randomFrom(g.fakeData.LastNames, "name")().(string))
 	return fmt.Sprintf("%s_%s_%d", first, last, g.counter)
 }
 
-func (g *DataGenerator) generatePassword() interface{} {
+func (g *DataGenerator) generatePassword() any {
 	chars := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"
 	b := make([]byte, 16)
 	for i := range b {
@@ -344,58 +344,58 @@ func (g *DataGenerator) generatePassword() interface{} {
 	return string(b)
 }
 
-func (g *DataGenerator) generateToken() interface{} {
+func (g *DataGenerator) generateToken() any {
 	b := make([]byte, 32)
 	g.rand.Read(b)
 	return fmt.Sprintf("%x", b)
 }
 
-func (g *DataGenerator) generateFullName() interface{} {
+func (g *DataGenerator) generateFullName() any {
 	first := g.randomFrom(g.fakeData.FirstNames, "John")().(string)
 	last := g.randomFrom(g.fakeData.LastNames, "Doe")().(string)
 	return fmt.Sprintf("%s %s", first, last)
 }
 
-func (g *DataGenerator) generatePhone() interface{} {
+func (g *DataGenerator) generatePhone() any {
 	return fmt.Sprintf("+1-%03d-%03d-%04d", g.rand.Intn(900)+100, g.rand.Intn(900)+100, g.rand.Intn(10000))
 }
 
-func (g *DataGenerator) generateURL() interface{} {
+func (g *DataGenerator) generateURL() any {
 	words := []string{"about", "contact", "blog", "products", "services", "help", "faq", "terms", "privacy", "careers"}
 	return fmt.Sprintf("https://example.com/%s", words[g.rand.Intn(len(words))])
 }
 
-func (g *DataGenerator) generateSlug() interface{} {
+func (g *DataGenerator) generateSlug() any {
 	words := []string{"getting-started", "best-practices", "introduction", "advanced-guide", "quick-start", "tutorial", "reference", "changelog"}
 	return words[g.rand.Intn(len(words))] + fmt.Sprintf("-%d", g.rand.Intn(1000))
 }
 
-func (g *DataGenerator) generateAddress() interface{} {
+func (g *DataGenerator) generateAddress() any {
 	street := g.randomFrom(g.fakeData.Streets, "Main Street")().(string)
 	city := g.randomFrom(g.fakeData.Cities, "New York")().(string)
 	state := g.randomFrom(g.fakeData.States, "NY")().(string)
 	return fmt.Sprintf("%d %s, %s, %s %05d", g.rand.Intn(9999)+1, street, city, state, g.rand.Intn(100000))
 }
 
-func (g *DataGenerator) generateZip() interface{} {
+func (g *DataGenerator) generateZip() any {
 	return fmt.Sprintf("%05d", g.rand.Intn(100000))
 }
 
-func (g *DataGenerator) generateColor() interface{} {
+func (g *DataGenerator) generateColor() any {
 	return fmt.Sprintf("#%06x", g.rand.Intn(0xffffff))
 }
 
-func (g *DataGenerator) generateIP() interface{} {
+func (g *DataGenerator) generateIP() any {
 	return fmt.Sprintf("%d.%d.%d.%d", g.rand.Intn(256), g.rand.Intn(256), g.rand.Intn(256), g.rand.Intn(256))
 }
 
-func (g *DataGenerator) generateHash() interface{} {
+func (g *DataGenerator) generateHash() any {
 	b := make([]byte, 16)
 	g.rand.Read(b)
 	return fmt.Sprintf("%x", b)
 }
 
-func (g *DataGenerator) generateRefCode() interface{} {
+func (g *DataGenerator) generateRefCode() any {
 	chars := "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 	b := make([]byte, 8)
 	for i := range b {

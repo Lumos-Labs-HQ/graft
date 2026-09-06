@@ -848,7 +848,7 @@ func (g *Generator) convertSQL(sql string) string {
 			sql = strings.ReplaceAll(sql, fmt.Sprintf("$%d", i), "%s")
 		}
 		placeholderCount := strings.Count(sql, "?")
-		for i := 0; i < placeholderCount; i++ {
+		for range placeholderCount {
 			sql = strings.Replace(sql, "?", "%s", 1)
 		}
 	case "sqlite", "sqlite3":

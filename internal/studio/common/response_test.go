@@ -65,7 +65,7 @@ func TestJSONMap(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Errorf("status = %d, want 200", w.Code)
 	}
-	var result map[string]interface{}
+	var result map[string]any
 	json.Unmarshal(w.Body.Bytes(), &result)
 	if result["count"] == nil {
 		t.Error("count key missing from response")
@@ -92,7 +92,7 @@ func TestParseJSON(t *testing.T) {
 	r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(body))
 	r.Header.Set("Content-Type", "application/json")
 
-	var target map[string]interface{}
+	var target map[string]any
 	if err := ParseJSON(r, &target); err != nil {
 		t.Fatalf("ParseJSON error: %v", err)
 	}
@@ -103,7 +103,7 @@ func TestParseJSON(t *testing.T) {
 
 func TestParseJSON_Invalid(t *testing.T) {
 	r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader("not json"))
-	var target map[string]interface{}
+	var target map[string]any
 	if err := ParseJSON(r, &target); err == nil {
 		t.Error("expected error for invalid JSON, got nil")
 	}

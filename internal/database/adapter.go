@@ -26,8 +26,8 @@ type DatabaseAdapter interface {
 	ExecuteMigration(ctx context.Context, migrationSQL string) error
 	ExecuteAndRecordMigration(ctx context.Context, migrationID, name, checksum string, migrationSQL string) error
 	ExecuteQuery(ctx context.Context, query string) (*common.QueryResult, error)
-	ExecuteQueryWithArgs(ctx context.Context, query string, args ...interface{}) (*common.QueryResult, error)
-	ExecuteDMLWithArgs(ctx context.Context, query string, args ...interface{}) error
+	ExecuteQueryWithArgs(ctx context.Context, query string, args ...any) (*common.QueryResult, error)
+	ExecuteDMLWithArgs(ctx context.Context, query string, args ...any) error
 	QuoteIdentifier(name string) string
 	ProviderName() string
 
@@ -48,7 +48,7 @@ type DatabaseAdapter interface {
 	CheckUniqueConstraint(ctx context.Context, tableName, constraintName string) (bool, error)
 
 	// Backup operations
-	GetTableData(ctx context.Context, tableName string) ([]map[string]interface{}, error)
+	GetTableData(ctx context.Context, tableName string) ([]map[string]any, error)
 	GetTableRowCount(ctx context.Context, tableName string) (int, error)
 	GetAllTableRowCounts(ctx context.Context, tableNames []string) (map[string]int, error)
 	DropTable(ctx context.Context, tableName string) error
@@ -76,8 +76,8 @@ type DatabaseAdapter interface {
 }
 
 type DatabaseConnection interface {
-	Query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
-	QueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row
-	Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
+	Query(ctx context.Context, query string, args ...any) (*sql.Rows, error)
+	QueryRow(ctx context.Context, query string, args ...any) *sql.Row
+	Exec(ctx context.Context, query string, args ...any) (sql.Result, error)
 	Begin(ctx context.Context) (*sql.Tx, error)
 }

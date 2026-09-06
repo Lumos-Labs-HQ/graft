@@ -1,5 +1,4 @@
 //go:build plugin_core || plugin_seed || dev
-// +build plugin_core plugin_seed dev
 
 package cmd
 
@@ -69,7 +68,7 @@ Examples:
 
 		var exclude []string
 		if excludeRaw != "" {
-			for _, e := range strings.Split(excludeRaw, ",") {
+			for e := range strings.SplitSeq(excludeRaw, ",") {
 				if e = strings.TrimSpace(e); e != "" {
 					exclude = append(exclude, e)
 				}

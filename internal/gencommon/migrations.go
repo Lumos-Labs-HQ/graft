@@ -6,7 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/Lumos-Labs-HQ/flash/internal/database/common"
@@ -43,7 +43,7 @@ func LoadEmbeddedMigrations(dir string) ([]EmbeddedMigration, error) {
 	}); err != nil {
 		return nil, fmt.Errorf("walk migrations: %w", err)
 	}
-	sort.Strings(paths)
+	slices.Sort(paths)
 
 	migrations := make([]EmbeddedMigration, 0, len(paths))
 	for _, path := range paths {

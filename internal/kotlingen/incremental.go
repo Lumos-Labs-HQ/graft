@@ -35,23 +35,18 @@ func (g *Generator) generateQueriesIncremental(queries []*parser.Query, fullRege
 	usedNames := make(map[string]int)
 	var mu sync.Mutex
 
-	numWorkers := runtime.NumCPU()
-	if numWorkers > len(groups) {
-		numWorkers = len(groups)
-	}
+	numWorkers := min(runtime.NumCPU(), len(groups))
 
 	workCh := make(chan fileGroup, len(groups))
 	errCh := make(chan error, len(groups))
 	var wg sync.WaitGroup
 
 	for i := 0; i < numWorkers; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			for fg := range workCh {
 				errCh <- g.generateSingleKtFile(fg.src, fg.queries, fullRegen, &mu, usedNames)
 			}
-		}()
+		})
 	}
 	for _, fg := range groups {
 		workCh <- fg

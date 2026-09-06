@@ -10,8 +10,8 @@ import (
 // resolveTable splits a potentially keyspace-qualified name into (keyspace, tablename).
 // If no keyspace prefix, fall back to adapter's current keyspace.
 func (a *Adapter) resolveTable(tableName string) (string, string) {
-	if idx := strings.Index(tableName, "."); idx >= 0 {
-		return tableName[:idx], tableName[idx+1:]
+	if before, after, ok := strings.Cut(tableName, "."); ok {
+		return before, after
 	}
 	return a.currentKeyspace(), tableName
 }

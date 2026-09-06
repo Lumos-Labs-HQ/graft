@@ -36,13 +36,13 @@ func (q *Queries) Createuser(name string, email string) (Users, error) {
 }
 
 type CreateuserfullParams struct {
-	Name string `json:"name"`
-	Email string `json:"email"`
-	Age int64 `json:"age"`
-	Bio string `json:"bio"`
-	Preferences []byte `json:"preferences"`
-	Tags []string `json:"tags"`
-	Role UserRole `json:"role"`
+	Name        string   `json:"name"`
+	Email       string   `json:"email"`
+	Age         int64    `json:"age"`
+	Bio         string   `json:"bio"`
+	Preferences []byte   `json:"preferences"`
+	Tags        []string `json:"tags"`
+	Role        UserRole `json:"role"`
 }
 
 func (q *Queries) Createuserfull(arg CreateuserfullParams) (Users, error) {
@@ -64,4 +64,3 @@ func (q *Queries) Createuserfull(arg CreateuserfullParams) (Users, error) {
 	err = rows.Scan(&result.Id, &result.Name, &result.Address, &result.Isadmin, &result.Age, &result.AgeRange, &result.Bio, &result.Email, &result.Preferences, &result.Tags, &result.AvatarHash, &result.Shipping, &result.CreatedAt, &result.UpdatedAt, &result.Role)
 	return result, err
 }
-

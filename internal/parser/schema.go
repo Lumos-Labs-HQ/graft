@@ -17,7 +17,6 @@ var (
 	enumRegex           *regexp.Regexp
 	createKeyspaceRegex *regexp.Regexp
 	createUDTRegex      *regexp.Regexp
-	regexOnce           sync.Once
 )
 
 func initRegex() {
@@ -27,12 +26,14 @@ func initRegex() {
 	createUDTRegex = regexp.MustCompile(`(?i)CREATE\s+TYPE\s+(\S+)\s*\(([\s\S]*?)\);`)
 }
 
+var initRegexOnce = sync.OnceFunc(initRegex)
+
 type SchemaParser struct {
 	Config *config.Config
 }
 
 func NewSchemaParser(cfg *config.Config) *SchemaParser {
-	regexOnce.Do(initRegex)
+	initRegexOnce()
 	return &SchemaParser{Config: cfg}
 }
 
@@ -377,7 +378,7 @@ func (p *SchemaParser) parseCreateEnums(sql string) []*Enum {
 		valuesStr := match[2]
 
 		var values []string
-		for _, v := range strings.Split(valuesStr, ",") {
+		for v := range strings.SplitSeq(valuesStr, ",") {
 			v = strings.TrimSpace(v)
 			v = strings.Trim(v, "'\"")
 			if v != "" {
@@ -410,7 +411,7 @@ func (p *SchemaParser) parseCreateUDTs(sql string) []*UDT {
 			Fields: make([]*UDTField, 0),
 		}
 		// Parse fields: each is "name type" separated by commas
-		for _, field := range strings.Split(match[2], ",") {
+		for field := range strings.SplitSeq(match[2], ",") {
 			field = strings.TrimSpace(field)
 			parts := strings.SplitN(field, " ", 2)
 			if len(parts) == 2 {

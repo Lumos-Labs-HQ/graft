@@ -147,15 +147,11 @@ func isTableInNewTables(name string, newTables []types.SchemaTable) bool {
 		if strings.EqualFold(t.Name, name) {
 			return true
 		}
-		if dotIdx := strings.LastIndex(t.Name, "."); dotIdx >= 0 {
-			if strings.EqualFold(t.Name[dotIdx+1:], name) {
-				return true
-			}
+		if _, after, ok := strings.CutLast(t.Name, "."); ok && strings.EqualFold(after, name) {
+			return true
 		}
-		if dotIdx := strings.LastIndex(name, "."); dotIdx >= 0 {
-			if strings.EqualFold(t.Name, name[dotIdx+1:]) {
-				return true
-			}
+		if _, after, ok := strings.CutLast(name, "."); ok && strings.EqualFold(t.Name, after) {
+			return true
 		}
 	}
 	return false
@@ -168,15 +164,11 @@ func findTableInSchema(name string, sm *schema.SchemaManager, schemaPath string)
 		if strings.EqualFold(t.Name, name) {
 			return &t
 		}
-		if dotIdx := strings.LastIndex(t.Name, "."); dotIdx >= 0 {
-			if strings.EqualFold(t.Name[dotIdx+1:], name) {
-				return &t
-			}
+		if _, after, ok := strings.CutLast(t.Name, "."); ok && strings.EqualFold(after, name) {
+			return &t
 		}
-		if dotIdx := strings.LastIndex(name, "."); dotIdx >= 0 {
-			if strings.EqualFold(t.Name, name[dotIdx+1:]) {
-				return &t
-			}
+		if _, after, ok := strings.CutLast(name, "."); ok && strings.EqualFold(t.Name, after) {
+			return &t
 		}
 	}
 	return nil

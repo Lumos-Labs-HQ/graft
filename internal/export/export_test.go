@@ -10,8 +10,8 @@ import (
 	"github.com/Lumos-Labs-HQ/flash/internal/types"
 )
 
-func makeBackup(tables map[string][]map[string]interface{}) types.BackupData {
-	t := make(map[string]interface{}, len(tables))
+func makeBackup(tables map[string][]map[string]any) types.BackupData {
+	t := make(map[string]any, len(tables))
 	for k, v := range tables {
 		t[k] = v
 	}
@@ -25,7 +25,7 @@ func makeBackup(tables map[string][]map[string]interface{}) types.BackupData {
 
 func TestExportToJSON_CreatesFile(t *testing.T) {
 	dir := t.TempDir()
-	data := makeBackup(map[string][]map[string]interface{}{
+	data := makeBackup(map[string][]map[string]any{
 		"users": {{"id": 1, "email": "a@b.com"}},
 	})
 
@@ -43,7 +43,7 @@ func TestExportToJSON_CreatesFile(t *testing.T) {
 
 func TestExportToJSON_ValidJSON(t *testing.T) {
 	dir := t.TempDir()
-	data := makeBackup(map[string][]map[string]interface{}{
+	data := makeBackup(map[string][]map[string]any{
 		"users": {{"id": 1, "name": "Alice"}},
 	})
 
@@ -53,7 +53,7 @@ func TestExportToJSON_ValidJSON(t *testing.T) {
 	}
 
 	raw, _ := os.ReadFile(path)
-	var parsed map[string]interface{}
+	var parsed map[string]any
 	if err := json.Unmarshal(raw, &parsed); err != nil {
 		t.Errorf("output is not valid JSON: %v", err)
 	}

@@ -2,6 +2,7 @@ package pull
 
 import (
 	"context"
+	"maps"
 	"os"
 	"path/filepath"
 	"strings"
@@ -66,9 +67,7 @@ func (s *Service) getTableIndexes(ctx context.Context, tables []types.SchemaTabl
 		if len(missing) > 0 {
 			batchResult, err := fetcher.GetAllTablesIndexes(ctx, missing)
 			if err == nil {
-				for name, indexes := range batchResult {
-					result[name] = indexes
-				}
+				maps.Copy(result, batchResult)
 			}
 		}
 	}

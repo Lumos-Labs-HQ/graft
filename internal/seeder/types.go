@@ -37,6 +37,6 @@ type ForeignKey struct {
 
 type GeneratedData struct {
 	TableName   string
-	Records     []map[string]interface{}
-	InsertedIDs map[string][]interface{} // table -> list of IDs
+	Records     []map[string]any
+	InsertedIDs map[string][]any // table -> list of IDs
 }

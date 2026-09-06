@@ -39,7 +39,7 @@ func (t SimpleTable) GetColumns() []SchemaColumn {
 }
 
 // extractTableNamesFromSchema extracts table names from various schema types
-func extractTableNamesFromSchema(schema interface{}) map[string]bool {
+func extractTableNamesFromSchema(schema any) map[string]bool {
 	if s, ok := schema.(interface {
 		GetTables() []interface{ GetName() string }
 	}); ok {
@@ -60,9 +60,9 @@ func extractTableNamesFromSchema(schema interface{}) map[string]bool {
 }
 
 // extractTableNamesViaReflection is the fallback that uses reflection
-func extractTableNamesViaReflection(schema interface{}) map[string]bool {
+func extractTableNamesViaReflection(schema any) map[string]bool {
 	schemaVal := reflect.ValueOf(schema)
-	if schemaVal.Kind() == reflect.Ptr {
+	if schemaVal.Kind() == reflect.Pointer {
 		schemaVal = schemaVal.Elem()
 	}
 
@@ -78,7 +78,7 @@ func extractTableNamesViaReflection(schema interface{}) map[string]bool {
 	tableNames := make(map[string]bool, tablesField.Len())
 	for i := 0; i < tablesField.Len(); i++ {
 		tablePtr := tablesField.Index(i)
-		if tablePtr.Kind() == reflect.Ptr {
+		if tablePtr.Kind() == reflect.Pointer {
 			tablePtr = tablePtr.Elem()
 		}
 		if tablePtr.Kind() == reflect.Struct {

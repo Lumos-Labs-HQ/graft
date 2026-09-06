@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 	"time"
 
@@ -66,13 +67,7 @@ func NewManager() (*Manager, error) {
 // InstallPlugin downloads and installs a plugin
 func (m *Manager) InstallPlugin(name, version string) error {
 	validPlugins := GetAllPlugins()
-	isValid := false
-	for _, validName := range validPlugins {
-		if validName == name {
-			isValid = true
-			break
-		}
-	}
+	isValid := slices.Contains(validPlugins, name)
 	if !isValid {
 		return fmt.Errorf("unknown plugin '%s', available plugins: %v", name, validPlugins)
 	}

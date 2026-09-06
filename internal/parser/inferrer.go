@@ -229,7 +229,7 @@ func (ti *TypeInferrer) inferParamTypeInternal(sql string, paramIndex int, table
 		insertColRegex := regexp.MustCompile(`(?i)INSERT\s+INTO\s+\S+\s*\(([\s\S]*?)\)\s*VALUES`)
 		allInsertCols := []string{}
 		for _, match := range insertColRegex.FindAllStringSubmatch(sql, -1) {
-			for _, c := range strings.Split(match[1], ",") {
+			for c := range strings.SplitSeq(match[1], ",") {
 				allInsertCols = append(allInsertCols, strings.TrimSpace(c))
 			}
 		}

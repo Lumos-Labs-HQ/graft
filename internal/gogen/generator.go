@@ -432,8 +432,8 @@ func (g *Generator) generateModels() error {
 		for _, udt := range g.schema.UDTs {
 			// Use bare name (without keyspace prefix) for struct naming
 			bareName := udt.Name
-			if dotIdx := strings.LastIndex(udt.Name, "."); dotIdx >= 0 {
-				bareName = udt.Name[dotIdx+1:]
+			if _, after, ok := strings.CutLast(udt.Name, "."); ok {
+				bareName = after
 			}
 			structName := utils.ToPascalCase(bareName)
 			code.WriteString(fmt.Sprintf("type %s struct {\n", structName))
@@ -967,8 +967,8 @@ func (g *Generator) mapSQLTypeToGo(sqlType string, nullable bool) string {
 		if isScylla && g.schema != nil {
 			for _, udt := range g.schema.UDTs {
 				bareName := udt.Name
-				if dotIdx := strings.LastIndex(udt.Name, "."); dotIdx >= 0 {
-					bareName = udt.Name[dotIdx+1:]
+				if _, after, ok := strings.CutLast(udt.Name, "."); ok {
+					bareName = after
 				}
 				if strings.EqualFold(bareName, inner) || strings.EqualFold(udt.Name, inner) {
 					goName := utils.ToPascalCase(bareName)
@@ -1065,8 +1065,8 @@ func (g *Generator) mapSQLTypeToGo(sqlType string, nullable bool) string {
 		if isScylla && g.schema != nil {
 			for _, udt := range g.schema.UDTs {
 				bareName := udt.Name
-				if dotIdx := strings.LastIndex(udt.Name, "."); dotIdx >= 0 {
-					bareName = udt.Name[dotIdx+1:]
+				if _, after, ok := strings.CutLast(udt.Name, "."); ok {
+					bareName = after
 				}
 				if strings.EqualFold(bareName, sqlTypeLower) || strings.EqualFold(udt.Name, sqlTypeLower) {
 					goName := utils.ToPascalCase(bareName)
@@ -1298,12 +1298,13 @@ func (g *Generator) generateGocqlQueryMethod(code *strings.Builder, query *parse
 	// Multi-statement → BATCH
 	stmts := splitCQLStatements(cleanSQL)
 	if len(stmts) > 1 {
-		batch := "BEGIN BATCH\n"
+		var batch strings.Builder
+		batch.WriteString("BEGIN BATCH\n")
 		for _, s := range stmts {
-			batch += "\t" + strings.TrimSpace(s) + ";\n"
+			batch.WriteString("\t" + strings.TrimSpace(s) + ";\n")
 		}
-		batch += "APPLY BATCH"
-		cleanSQL = batch
+		batch.WriteString("APPLY BATCH")
+		cleanSQL = batch.String()
 	}
 
 	code.WriteString(fmt.Sprintf("\tconst query = `%s`\n", cleanSQL))
@@ -1412,7 +1413,7 @@ func (g *Generator) generateGocqlQueryMethod(code *strings.Builder, query *parse
 // splitCQLStatements splits multiple CQL statements (separated by ;) for BATCH wrapping.
 func splitCQLStatements(sql string) []string {
 	var stmts []string
-	for _, s := range strings.Split(sql, ";") {
+	for s := range strings.SplitSeq(sql, ";") {
 		if s = strings.TrimSpace(s); s != "" {
 			stmts = append(stmts, s)
 		}

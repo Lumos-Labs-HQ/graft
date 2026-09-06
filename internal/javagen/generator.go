@@ -294,8 +294,8 @@ func (g *Generator) generateModels() error {
 	// One file per record
 	for _, table := range g.schema.Tables {
 		tableName := table.Name
-		if idx := strings.LastIndex(tableName, "."); idx >= 0 {
-			tableName = tableName[idx+1:]
+		if _, after, ok := strings.CutLast(tableName, "."); ok {
+			tableName = after
 		}
 		name := utils.ToPascalCase(tableName)
 		var w strings.Builder
@@ -637,8 +637,8 @@ func javaParamRef(name string, useStruct bool) string {
 func javaTypedSetter(idx int, paramName, sqlType string) string {
 	sl := strings.ToLower(sqlType)
 	// Any SQL array type → createArrayOf
-	if strings.HasSuffix(sl, "[]") {
-		baseType := strings.TrimSuffix(sl, "[]")
+	if before, ok := strings.CutSuffix(sl, "[]"); ok {
+		baseType := before
 		pgType := "text"
 		switch {
 		case strings.Contains(baseType, "int") || strings.Contains(baseType, "serial"):

@@ -40,10 +40,7 @@ func (g *Generator) generateQueriesIncremental(queries []*parser.Query, fullRege
 	var usedNamesMu sync.Mutex
 
 	// Parallel code generation with worker pool
-	numWorkers := runtime.NumCPU()
-	if numWorkers > len(fileGroups) {
-		numWorkers = len(fileGroups)
-	}
+	numWorkers := min(runtime.NumCPU(), len(fileGroups))
 
 	type generateResult struct {
 		err error
@@ -54,14 +51,12 @@ func (g *Generator) generateQueriesIncremental(queries []*parser.Query, fullRege
 
 	var wg sync.WaitGroup
 	for i := 0; i < numWorkers; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			for fg := range workChan {
 				err := g.generateSingleFile(fg.sourceFile, fg.queries, fullRegen, &usedNamesMu, usedNames)
 				resultChan <- generateResult{err: err}
 			}
-		}()
+		})
 	}
 
 	// Send work to workers

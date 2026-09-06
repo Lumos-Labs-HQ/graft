@@ -65,15 +65,15 @@ func SaveSchemaSnapshot(path string, tables []types.SchemaTable, enums []types.S
 }
 
 // SaveSchemaSnapshotFull writes the given schema state including keyspaces.
-func SaveSchemaSnapshotFull(path string, tables []types.SchemaTable, enums []types.SchemaEnum, indexes interface{}, keyspaces []types.SchemaKeyspace) error {
+func SaveSchemaSnapshotFull(path string, tables []types.SchemaTable, enums []types.SchemaEnum, indexes any, keyspaces []types.SchemaKeyspace) error {
 	return SaveSchemaSnapshotFullV2(path, tables, enums, indexes, keyspaces, nil)
 }
 
-func SaveSchemaSnapshotFullV2(path string, tables []types.SchemaTable, enums []types.SchemaEnum, indexes interface{}, keyspaces []types.SchemaKeyspace, udts []types.SchemaUDT) error {
+func SaveSchemaSnapshotFullV2(path string, tables []types.SchemaTable, enums []types.SchemaEnum, indexes any, keyspaces []types.SchemaKeyspace, udts []types.SchemaUDT) error {
 	return SaveSchemaSnapshotFullV3(path, tables, enums, indexes, keyspaces, udts, nil)
 }
 
-func SaveSchemaSnapshotFullV3(path string, tables []types.SchemaTable, enums []types.SchemaEnum, indexes interface{}, keyspaces []types.SchemaKeyspace, udts []types.SchemaUDT, rawStatements []string) error {
+func SaveSchemaSnapshotFullV3(path string, tables []types.SchemaTable, enums []types.SchemaEnum, indexes any, keyspaces []types.SchemaKeyspace, udts []types.SchemaUDT, rawStatements []string) error {
 	dir := filepath.Dir(path)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return fmt.Errorf("failed to create snapshot directory: %w", err)

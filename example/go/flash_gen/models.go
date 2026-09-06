@@ -5,200 +5,200 @@ package flash_gen
 import (
 	"database/sql"
 	"time"
+
 	"github.com/google/uuid"
 )
 
 type PostStatus string
 
 const (
-	PostStatusDraft PostStatus = "draft"
+	PostStatusDraft     PostStatus = "draft"
 	PostStatusPublished PostStatus = "published"
-	PostStatusArchived PostStatus = "archived"
+	PostStatusArchived  PostStatus = "archived"
 )
 
 type UserRole string
 
 const (
-	UserRoleAdmin UserRole = "admin"
+	UserRoleAdmin     UserRole = "admin"
 	UserRoleModerator UserRole = "moderator"
-	UserRoleUser UserRole = "user"
-	UserRoleGuest UserRole = "guest"
+	UserRoleUser      UserRole = "user"
+	UserRoleGuest     UserRole = "guest"
 )
 
 type SubscriptionTier string
 
 const (
-	SubscriptionTierFree SubscriptionTier = "free"
-	SubscriptionTierPro SubscriptionTier = "pro"
+	SubscriptionTierFree       SubscriptionTier = "free"
+	SubscriptionTierPro        SubscriptionTier = "pro"
 	SubscriptionTierEnterprise SubscriptionTier = "enterprise"
 )
 
 type OrderState string
 
 const (
-	OrderStatePending OrderState = "pending"
+	OrderStatePending   OrderState = "pending"
 	OrderStateConfirmed OrderState = "confirmed"
-	OrderStateShipped OrderState = "shipped"
+	OrderStateShipped   OrderState = "shipped"
 	OrderStateDelivered OrderState = "delivered"
 	OrderStateCancelled OrderState = "cancelled"
-	OrderStateRefunded OrderState = "refunded"
+	OrderStateRefunded  OrderState = "refunded"
 )
 
 type Users struct {
-	Id int64 `json:"id" db:"id"`
-	Name string `json:"name" db:"name"`
-	Address sql.NullString `json:"address" db:"address"`
-	Isadmin bool `json:"isadmin" db:"isadmin"`
-	Age sql.NullInt64 `json:"age" db:"age"`
-	AgeRange sql.NullInt64 `json:"age_range" db:"age_range"`
-	Bio sql.NullString `json:"bio" db:"bio"`
-	Email string `json:"email" db:"email"`
-	Preferences *[]byte `json:"preferences" db:"preferences"`
-	Tags []string `json:"tags" db:"tags"`
-	AvatarHash *uuid.UUID `json:"avatar_hash" db:"avatar_hash"`
-	Shipping sql.NullString `json:"shipping" db:"shipping"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
-	Role UserRole `json:"role" db:"role"`
+	Id          int64          `json:"id" db:"id"`
+	Name        string         `json:"name" db:"name"`
+	Address     sql.NullString `json:"address" db:"address"`
+	Isadmin     bool           `json:"isadmin" db:"isadmin"`
+	Age         sql.NullInt64  `json:"age" db:"age"`
+	AgeRange    sql.NullInt64  `json:"age_range" db:"age_range"`
+	Bio         sql.NullString `json:"bio" db:"bio"`
+	Email       string         `json:"email" db:"email"`
+	Preferences *[]byte        `json:"preferences" db:"preferences"`
+	Tags        []string       `json:"tags" db:"tags"`
+	AvatarHash  *uuid.UUID     `json:"avatar_hash" db:"avatar_hash"`
+	Shipping    sql.NullString `json:"shipping" db:"shipping"`
+	CreatedAt   time.Time      `json:"created_at" db:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at" db:"updated_at"`
+	Role        UserRole       `json:"role" db:"role"`
 }
 
 type Categories struct {
-	Id int64 `json:"id" db:"id"`
-	Name string `json:"name" db:"name"`
-	Slug sql.NullString `json:"slug" db:"slug"`
-	Color sql.NullString `json:"color" db:"color"`
-	Metadata *[]byte `json:"metadata" db:"metadata"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
+	Id        int64          `json:"id" db:"id"`
+	Name      string         `json:"name" db:"name"`
+	Slug      sql.NullString `json:"slug" db:"slug"`
+	Color     sql.NullString `json:"color" db:"color"`
+	Metadata  *[]byte        `json:"metadata" db:"metadata"`
+	CreatedAt time.Time      `json:"created_at" db:"created_at"`
 }
 
 type Posts struct {
-	Id int64 `json:"id" db:"id"`
-	UserId int64 `json:"user_id" db:"user_id"`
-	CategoryId int64 `json:"category_id" db:"category_id"`
-	Title string `json:"title" db:"title"`
-	Content string `json:"content" db:"content"`
-	Excerpt sql.NullString `json:"excerpt" db:"excerpt"`
-	Tags []string `json:"tags" db:"tags"`
-	Metadata *[]byte `json:"metadata" db:"metadata"`
-	ViewCount int64 `json:"view_count" db:"view_count"`
-	IsFeatured bool `json:"is_featured" db:"is_featured"`
-	PublishedAt sql.NullTime `json:"published_at" db:"published_at"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
-	Status PostStatus `json:"status" db:"status"`
+	Id          int64          `json:"id" db:"id"`
+	UserId      int64          `json:"user_id" db:"user_id"`
+	CategoryId  int64          `json:"category_id" db:"category_id"`
+	Title       string         `json:"title" db:"title"`
+	Content     string         `json:"content" db:"content"`
+	Excerpt     sql.NullString `json:"excerpt" db:"excerpt"`
+	Tags        []string       `json:"tags" db:"tags"`
+	Metadata    *[]byte        `json:"metadata" db:"metadata"`
+	ViewCount   int64          `json:"view_count" db:"view_count"`
+	IsFeatured  bool           `json:"is_featured" db:"is_featured"`
+	PublishedAt sql.NullTime   `json:"published_at" db:"published_at"`
+	CreatedAt   time.Time      `json:"created_at" db:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at" db:"updated_at"`
+	Status      PostStatus     `json:"status" db:"status"`
 }
 
 type Comments struct {
-	Id int64 `json:"id" db:"id"`
-	PostId int64 `json:"post_id" db:"post_id"`
-	UserId int64 `json:"user_id" db:"user_id"`
-	ParentId sql.NullInt64 `json:"parent_id" db:"parent_id"`
-	Content string `json:"content" db:"content"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
+	Id        int64         `json:"id" db:"id"`
+	PostId    int64         `json:"post_id" db:"post_id"`
+	UserId    int64         `json:"user_id" db:"user_id"`
+	ParentId  sql.NullInt64 `json:"parent_id" db:"parent_id"`
+	Content   string        `json:"content" db:"content"`
+	CreatedAt time.Time     `json:"created_at" db:"created_at"`
 }
 
 type Subscriptions struct {
-	Id int64 `json:"id" db:"id"`
-	UserId int64 `json:"user_id" db:"user_id"`
-	Tier SubscriptionTier `json:"tier" db:"tier"`
-	StartedAt time.Time `json:"started_at" db:"started_at"`
-	ExpiresAt sql.NullTime `json:"expires_at" db:"expires_at"`
-	AutoRenew bool `json:"auto_renew" db:"auto_renew"`
+	Id        int64            `json:"id" db:"id"`
+	UserId    int64            `json:"user_id" db:"user_id"`
+	Tier      SubscriptionTier `json:"tier" db:"tier"`
+	StartedAt time.Time        `json:"started_at" db:"started_at"`
+	ExpiresAt sql.NullTime     `json:"expires_at" db:"expires_at"`
+	AutoRenew bool             `json:"auto_renew" db:"auto_renew"`
 }
 
 type Orders struct {
-	Id uuid.UUID `json:"id" db:"id"`
-	UserId int64 `json:"user_id" db:"user_id"`
-	TotalAmount float64 `json:"total_amount" db:"total_amount"`
-	DiscountPct sql.NullString `json:"discount_pct" db:"discount_pct"`
-	ShippingAddr string `json:"shipping_addr" db:"shipping_addr"`
-	LineItems []byte `json:"line_items" db:"line_items"`
-	State OrderState `json:"state" db:"state"`
-	PlacedAt time.Time `json:"placed_at" db:"placed_at"`
-	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+	Id           uuid.UUID      `json:"id" db:"id"`
+	UserId       int64          `json:"user_id" db:"user_id"`
+	TotalAmount  float64        `json:"total_amount" db:"total_amount"`
+	DiscountPct  sql.NullString `json:"discount_pct" db:"discount_pct"`
+	ShippingAddr string         `json:"shipping_addr" db:"shipping_addr"`
+	LineItems    []byte         `json:"line_items" db:"line_items"`
+	State        OrderState     `json:"state" db:"state"`
+	PlacedAt     time.Time      `json:"placed_at" db:"placed_at"`
+	UpdatedAt    time.Time      `json:"updated_at" db:"updated_at"`
 }
 
 type AuditLog struct {
-	Id int64 `json:"id" db:"id"`
-	TableName string `json:"table_name" db:"table_name"`
-	RecordId string `json:"record_id" db:"record_id"`
-	Action string `json:"action" db:"action"`
-	OldData *[]byte `json:"old_data" db:"old_data"`
-	NewData *[]byte `json:"new_data" db:"new_data"`
+	Id        int64         `json:"id" db:"id"`
+	TableName string        `json:"table_name" db:"table_name"`
+	RecordId  string        `json:"record_id" db:"record_id"`
+	Action    string        `json:"action" db:"action"`
+	OldData   *[]byte       `json:"old_data" db:"old_data"`
+	NewData   *[]byte       `json:"new_data" db:"new_data"`
 	ChangedBy sql.NullInt64 `json:"changed_by" db:"changed_by"`
-	ChangedAt time.Time `json:"changed_at" db:"changed_at"`
+	ChangedAt time.Time     `json:"changed_at" db:"changed_at"`
 }
 
 type UserSessions struct {
-	Id uuid.UUID `json:"id" db:"id"`
-	UserId int64 `json:"user_id" db:"user_id"`
-	Token string `json:"token" db:"token"`
+	Id        uuid.UUID      `json:"id" db:"id"`
+	UserId    int64          `json:"user_id" db:"user_id"`
+	Token     string         `json:"token" db:"token"`
 	IpAddress sql.NullString `json:"ip_address" db:"ip_address"`
 	UserAgent sql.NullString `json:"user_agent" db:"user_agent"`
-	ExpiresAt time.Time `json:"expires_at" db:"expires_at"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
+	ExpiresAt time.Time      `json:"expires_at" db:"expires_at"`
+	CreatedAt time.Time      `json:"created_at" db:"created_at"`
 }
 
 type Notifications struct {
-	Id int64 `json:"id" db:"id"`
-	UserId int64 `json:"user_id" db:"user_id"`
-	Type string `json:"type" db:"type"`
-	Title string `json:"title" db:"title"`
-	Body string `json:"body" db:"body"`
-	IsRead bool `json:"is_read" db:"is_read"`
-	Metadata *[]byte `json:"metadata" db:"metadata"`
+	Id        int64     `json:"id" db:"id"`
+	UserId    int64     `json:"user_id" db:"user_id"`
+	Type      string    `json:"type" db:"type"`
+	Title     string    `json:"title" db:"title"`
+	Body      string    `json:"body" db:"body"`
+	IsRead    bool      `json:"is_read" db:"is_read"`
+	Metadata  *[]byte   `json:"metadata" db:"metadata"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 }
 
 type Tags struct {
-	Id int64 `json:"id" db:"id"`
-	Name string `json:"name" db:"name"`
-	Slug string `json:"slug" db:"slug"`
+	Id    int64          `json:"id" db:"id"`
+	Name  string         `json:"name" db:"name"`
+	Slug  string         `json:"slug" db:"slug"`
 	Color sql.NullString `json:"color" db:"color"`
 }
 
 type PostTags struct {
 	PostId int64 `json:"post_id" db:"post_id"`
-	TagId int64 `json:"tag_id" db:"tag_id"`
+	TagId  int64 `json:"tag_id" db:"tag_id"`
 }
 
 type Media struct {
-	Id uuid.UUID `json:"id" db:"id"`
-	UserId int64 `json:"user_id" db:"user_id"`
-	PostId sql.NullInt64 `json:"post_id" db:"post_id"`
-	Type string `json:"type" db:"type"`
-	Url string `json:"url" db:"url"`
-	SizeBytes int64 `json:"size_bytes" db:"size_bytes"`
-	MimeType string `json:"mime_type" db:"mime_type"`
-	Width sql.NullInt64 `json:"width" db:"width"`
-	Height sql.NullInt64 `json:"height" db:"height"`
-	Metadata *[]byte `json:"metadata" db:"metadata"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
+	Id        uuid.UUID     `json:"id" db:"id"`
+	UserId    int64         `json:"user_id" db:"user_id"`
+	PostId    sql.NullInt64 `json:"post_id" db:"post_id"`
+	Type      string        `json:"type" db:"type"`
+	Url       string        `json:"url" db:"url"`
+	SizeBytes int64         `json:"size_bytes" db:"size_bytes"`
+	MimeType  string        `json:"mime_type" db:"mime_type"`
+	Width     sql.NullInt64 `json:"width" db:"width"`
+	Height    sql.NullInt64 `json:"height" db:"height"`
+	Metadata  *[]byte       `json:"metadata" db:"metadata"`
+	CreatedAt time.Time     `json:"created_at" db:"created_at"`
 }
 
 type ActiveUsers struct {
-	Id sql.NullString `json:"id" db:"id"`
-	Name sql.NullString `json:"name" db:"name"`
-	Email sql.NullString `json:"email" db:"email"`
-	Role sql.NullString `json:"role" db:"role"`
+	Id        sql.NullString `json:"id" db:"id"`
+	Name      sql.NullString `json:"name" db:"name"`
+	Email     sql.NullString `json:"email" db:"email"`
+	Role      sql.NullString `json:"role" db:"role"`
 	CreatedAt sql.NullString `json:"created_at" db:"created_at"`
 }
 
 type UserActivitySummary struct {
-	Id sql.NullString `json:"id" db:"id"`
-	Name sql.NullString `json:"name" db:"name"`
-	Email sql.NullString `json:"email" db:"email"`
-	PostCount sql.NullString `json:"post_count" db:"post_count"`
+	Id           sql.NullString `json:"id" db:"id"`
+	Name         sql.NullString `json:"name" db:"name"`
+	Email        sql.NullString `json:"email" db:"email"`
+	PostCount    sql.NullString `json:"post_count" db:"post_count"`
 	CommentCount sql.NullString `json:"comment_count" db:"comment_count"`
-	LastPostAt sql.NullString `json:"last_post_at" db:"last_post_at"`
-	UserType sql.NullString `json:"user_type" db:"user_type"`
+	LastPostAt   sql.NullString `json:"last_post_at" db:"last_post_at"`
+	UserType     sql.NullString `json:"user_type" db:"user_type"`
 }
 
 type PostStats struct {
-	PostId sql.NullString `json:"post_id" db:"post_id"`
-	Title sql.NullString `json:"title" db:"title"`
-	CommentCount sql.NullString `json:"comment_count" db:"comment_count"`
+	PostId           sql.NullString `json:"post_id" db:"post_id"`
+	Title            sql.NullString `json:"title" db:"title"`
+	CommentCount     sql.NullString `json:"comment_count" db:"comment_count"`
 	UniqueCommenters sql.NullString `json:"unique_commenters" db:"unique_commenters"`
-	LastCommentAt sql.NullString `json:"last_comment_at" db:"last_comment_at"`
+	LastCommentAt    sql.NullString `json:"last_comment_at" db:"last_comment_at"`
 }
-

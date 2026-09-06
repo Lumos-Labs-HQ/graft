@@ -38,11 +38,11 @@ func (a *Adapter) ExecuteQuery(ctx context.Context, query string) (*common.Query
 	return nil, nil
 }
 
-func (a *Adapter) ExecuteQueryWithArgs(ctx context.Context, query string, args ...interface{}) (*common.QueryResult, error) {
+func (a *Adapter) ExecuteQueryWithArgs(ctx context.Context, query string, args ...any) (*common.QueryResult, error) {
 	return nil, fmt.Errorf("MongoDB does not support SQL queries")
 }
 
-func (a *Adapter) ExecuteDMLWithArgs(ctx context.Context, query string, args ...interface{}) error {
+func (a *Adapter) ExecuteDMLWithArgs(ctx context.Context, query string, args ...any) error {
 	return fmt.Errorf("MongoDB does not support SQL DML")
 }
 
@@ -154,15 +154,15 @@ func (a *Adapter) GetTableNamesInSchema(ctx context.Context, schemaName string) 
 	return nil, nil
 }
 
-func (a *Adapter) Query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+func (a *Adapter) Query(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
 	return nil, nil
 }
 
-func (a *Adapter) QueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
+func (a *Adapter) QueryRow(ctx context.Context, query string, args ...any) *sql.Row {
 	return nil
 }
 
-func (a *Adapter) Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+func (a *Adapter) Exec(ctx context.Context, query string, args ...any) (sql.Result, error) {
 	return nil, nil
 }
 

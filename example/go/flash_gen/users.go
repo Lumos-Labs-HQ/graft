@@ -4,8 +4,8 @@ package flash_gen
 
 import (
 	"database/sql"
-	"time"
 	"github.com/google/uuid"
+	"time"
 )
 
 func (q *Queries) Getuser(id int64) (Users, error) {
@@ -95,7 +95,7 @@ func (q *Queries) Updateusername(name string, id int64) (Users, error) {
 	return result, err
 }
 
-func (q *Queries) Updateuserrole(role UserRole, id int64) (error) {
+func (q *Queries) Updateuserrole(role UserRole, id int64) error {
 	const query = `UPDATE users SET role = $1, updated_at = NOW() WHERE id = $2;`
 	stmt := q.stmts["Updateuserrole_stmt"]
 	if stmt == nil {
@@ -112,7 +112,7 @@ func (q *Queries) Updateuserrole(role UserRole, id int64) (error) {
 	return err
 }
 
-func (q *Queries) Deleteuser(id int64) (error) {
+func (q *Queries) Deleteuser(id int64) error {
 	const query = `DELETE FROM users WHERE id = $1;`
 	stmt := q.stmts["Deleteuser_stmt"]
 	if stmt == nil {
@@ -148,7 +148,7 @@ func (q *Queries) Listusers(limit int64, offset int64) ([]Users, error) {
 	}
 	defer rows.Close()
 
-	items := make([]Users, 0, 8) 
+	items := make([]Users, 0, 8)
 	for rows.Next() {
 		var item Users
 		if err := rows.Scan(&item.Id, &item.Name, &item.Address, &item.Isadmin, &item.Age, &item.AgeRange, &item.Bio, &item.Email, &item.Preferences, &item.Tags, &item.AvatarHash, &item.Shipping, &item.CreatedAt, &item.UpdatedAt, &item.Role); err != nil {
@@ -160,9 +160,9 @@ func (q *Queries) Listusers(limit int64, offset int64) ([]Users, error) {
 }
 
 type UpsertuserParams struct {
-	Name string `json:"name"`
-	Email string `json:"email"`
-	Role UserRole `json:"role"`
+	Name  string   `json:"name"`
+	Email string   `json:"email"`
+	Role  UserRole `json:"role"`
 }
 
 func (q *Queries) Upsertuser(arg UpsertuserParams) (Users, error) {
@@ -195,9 +195,9 @@ func (q *Queries) Upsertuser(arg UpsertuserParams) (Users, error) {
 }
 
 type UpsertuserwithcoalesceParams struct {
-	Name string `json:"name"`
+	Name  string `json:"name"`
 	Email string `json:"email"`
-	Bio string `json:"bio"`
+	Bio   string `json:"bio"`
 }
 
 func (q *Queries) Upsertuserwithcoalesce(arg UpsertuserwithcoalesceParams) (Users, error) {
@@ -247,7 +247,7 @@ func (q *Queries) Getuserswithnulladdress() ([]GetuserswithnulladdressRow, error
 	}
 	defer rows.Close()
 
-	items := make([]GetuserswithnulladdressRow, 0, 8) 
+	items := make([]GetuserswithnulladdressRow, 0, 8)
 	for rows.Next() {
 		var item GetuserswithnulladdressRow
 		if err := rows.Scan(&item.Id, &item.Name, &item.Email); err != nil {
@@ -259,8 +259,8 @@ func (q *Queries) Getuserswithnulladdress() ([]GetuserswithnulladdressRow, error
 }
 
 type GetuserswithnulladdressRow struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
+	Id    int64  `json:"id"`
+	Name  string `json:"name"`
 	Email string `json:"email"`
 }
 
@@ -282,7 +282,7 @@ func (q *Queries) Getuserswithbio() ([]GetuserswithbioRow, error) {
 	}
 	defer rows.Close()
 
-	items := make([]GetuserswithbioRow, 0, 8) 
+	items := make([]GetuserswithbioRow, 0, 8)
 	for rows.Next() {
 		var item GetuserswithbioRow
 		if err := rows.Scan(&item.Id, &item.Name, &item.Email, &item.Bio); err != nil {
@@ -294,10 +294,10 @@ func (q *Queries) Getuserswithbio() ([]GetuserswithbioRow, error) {
 }
 
 type GetuserswithbioRow struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
+	Id    int64  `json:"id"`
+	Name  string `json:"name"`
 	Email string `json:"email"`
-	Bio string `json:"bio"`
+	Bio   string `json:"bio"`
 }
 
 func (q *Queries) Getuserdisplayinfo(id int64) (GetuserdisplayinfoRow, error) {
@@ -330,20 +330,20 @@ func (q *Queries) Getuserdisplayinfo(id int64) (GetuserdisplayinfoRow, error) {
 }
 
 type GetuserdisplayinfoRow struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
-	Email string `json:"email"`
+	Id             int64  `json:"id"`
+	Name           string `json:"name"`
+	Email          string `json:"email"`
 	DisplayAddress string `json:"display_address"`
-	Age string `json:"age"`
-	Bio string `json:"bio"`
+	Age            string `json:"age"`
+	Bio            string `json:"bio"`
 }
 
 type SearchuserswithcoalesceParams struct {
-	Name string `json:"name"`
-	Email string `json:"email"`
-	Name2 string `json:"name2"`
-	Limit int64 `json:"limit"`
-	Offset int64 `json:"offset"`
+	Name   string `json:"name"`
+	Email  string `json:"email"`
+	Name2  string `json:"name2"`
+	Limit  int64  `json:"limit"`
+	Offset int64  `json:"offset"`
 }
 
 func (q *Queries) Searchuserswithcoalesce(arg SearchuserswithcoalesceParams) ([]SearchuserswithcoalesceRow, error) {
@@ -356,7 +356,7 @@ func (q *Queries) Searchuserswithcoalesce(arg SearchuserswithcoalesceParams) ([]
 	}
 	defer rows.Close()
 
-	items := make([]SearchuserswithcoalesceRow, 0, 8) 
+	items := make([]SearchuserswithcoalesceRow, 0, 8)
 	for rows.Next() {
 		var item SearchuserswithcoalesceRow
 		if err := rows.Scan(&item.Id, &item.Name, &item.Email, &item.BioText); err != nil {
@@ -368,9 +368,9 @@ func (q *Queries) Searchuserswithcoalesce(arg SearchuserswithcoalesceParams) ([]
 }
 
 type SearchuserswithcoalesceRow struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
-	Email string `json:"email"`
+	Id      int64  `json:"id"`
+	Name    string `json:"name"`
+	Email   string `json:"email"`
 	BioText string `json:"bio_text"`
 }
 
@@ -393,7 +393,7 @@ func (q *Queries) Getuserscreatedbetween(created_at_start time.Time, created_at_
 	}
 	defer rows.Close()
 
-	items := make([]GetuserscreatedbetweenRow, 0, 8) 
+	items := make([]GetuserscreatedbetweenRow, 0, 8)
 	for rows.Next() {
 		var item GetuserscreatedbetweenRow
 		if err := rows.Scan(&item.Id, &item.Name, &item.Email, &item.CreatedAt); err != nil {
@@ -405,9 +405,9 @@ func (q *Queries) Getuserscreatedbetween(created_at_start time.Time, created_at_
 }
 
 type GetuserscreatedbetweenRow struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
-	Email string `json:"email"`
+	Id        int64     `json:"id"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -430,7 +430,7 @@ func (q *Queries) Getusersbyagerange(age_start int64, age_end int64) ([]Getusers
 	}
 	defer rows.Close()
 
-	items := make([]GetusersbyagerangeRow, 0, 8) 
+	items := make([]GetusersbyagerangeRow, 0, 8)
 	for rows.Next() {
 		var item GetusersbyagerangeRow
 		if err := rows.Scan(&item.Id, &item.Name, &item.Age, &item.AgeRange); err != nil {
@@ -442,10 +442,10 @@ func (q *Queries) Getusersbyagerange(age_start int64, age_end int64) ([]Getusers
 }
 
 type GetusersbyagerangeRow struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
-	Age int64 `json:"age"`
-	AgeRange int64 `json:"age_range"`
+	Id       int64  `json:"id"`
+	Name     string `json:"name"`
+	Age      int64  `json:"age"`
+	AgeRange int64  `json:"age_range"`
 }
 
 func (q *Queries) Getusersbygeneratedrange(age_range int64) ([]GetusersbygeneratedrangeRow, error) {
@@ -467,7 +467,7 @@ func (q *Queries) Getusersbygeneratedrange(age_range int64) ([]Getusersbygenerat
 	}
 	defer rows.Close()
 
-	items := make([]GetusersbygeneratedrangeRow, 0, 8) 
+	items := make([]GetusersbygeneratedrangeRow, 0, 8)
 	for rows.Next() {
 		var item GetusersbygeneratedrangeRow
 		if err := rows.Scan(&item.Id, &item.Name, &item.Age, &item.AgeRange); err != nil {
@@ -479,16 +479,16 @@ func (q *Queries) Getusersbygeneratedrange(age_range int64) ([]Getusersbygenerat
 }
 
 type GetusersbygeneratedrangeRow struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
-	Age int64 `json:"age"`
-	AgeRange int64 `json:"age_range"`
+	Id       int64  `json:"id"`
+	Name     string `json:"name"`
+	Age      int64  `json:"age"`
+	AgeRange int64  `json:"age_range"`
 }
 
 type GetrecentusersParams struct {
 	CreatedAt time.Time `json:"created_at"`
-	Limit int64 `json:"limit"`
-	Offset int64 `json:"offset"`
+	Limit     int64     `json:"limit"`
+	Offset    int64     `json:"offset"`
 }
 
 func (q *Queries) Getrecentusers(arg GetrecentusersParams) ([]Users, error) {
@@ -510,7 +510,7 @@ func (q *Queries) Getrecentusers(arg GetrecentusersParams) ([]Users, error) {
 	}
 	defer rows.Close()
 
-	items := make([]Users, 0, 8) 
+	items := make([]Users, 0, 8)
 	for rows.Next() {
 		var item Users
 		if err := rows.Scan(&item.Id, &item.Name, &item.Address, &item.Isadmin, &item.Age, &item.AgeRange, &item.Bio, &item.Email, &item.Preferences, &item.Tags, &item.AvatarHash, &item.Shipping, &item.CreatedAt, &item.UpdatedAt, &item.Role); err != nil {
@@ -551,12 +551,12 @@ func (q *Queries) Getuserpreferences(id int64) (GetuserpreferencesRow, error) {
 }
 
 type GetuserpreferencesRow struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
+	Id          int64  `json:"id"`
+	Name        string `json:"name"`
 	Preferences []byte `json:"preferences"`
 }
 
-func (q *Queries) Updateuserpreferences(preferences []byte, id int64) (error) {
+func (q *Queries) Updateuserpreferences(preferences []byte, id int64) error {
 	const query = `UPDATE users SET preferences = preferences || $1, updated_at = NOW() WHERE id = $2;`
 	stmt := q.stmts["Updateuserpreferences_stmt"]
 	if stmt == nil {
@@ -592,7 +592,7 @@ func (q *Queries) Findusersbyjsonkey(preferences []byte) ([]FindusersbyjsonkeyRo
 	}
 	defer rows.Close()
 
-	items := make([]FindusersbyjsonkeyRow, 0, 8) 
+	items := make([]FindusersbyjsonkeyRow, 0, 8)
 	for rows.Next() {
 		var item FindusersbyjsonkeyRow
 		if err := rows.Scan(&item.Id, &item.Name, &item.Email, &item.Preferences); err != nil {
@@ -604,9 +604,9 @@ func (q *Queries) Findusersbyjsonkey(preferences []byte) ([]FindusersbyjsonkeyRo
 }
 
 type FindusersbyjsonkeyRow struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
-	Email string `json:"email"`
+	Id          int64  `json:"id"`
+	Name        string `json:"name"`
+	Email       string `json:"email"`
 	Preferences []byte `json:"preferences"`
 }
 
@@ -629,7 +629,7 @@ func (q *Queries) Findusersbyjsoncontains(preferences []byte) ([]Findusersbyjson
 	}
 	defer rows.Close()
 
-	items := make([]FindusersbyjsoncontainsRow, 0, 8) 
+	items := make([]FindusersbyjsoncontainsRow, 0, 8)
 	for rows.Next() {
 		var item FindusersbyjsoncontainsRow
 		if err := rows.Scan(&item.Id, &item.Name, &item.Email); err != nil {
@@ -641,8 +641,8 @@ func (q *Queries) Findusersbyjsoncontains(preferences []byte) ([]Findusersbyjson
 }
 
 type FindusersbyjsoncontainsRow struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
+	Id    int64  `json:"id"`
+	Name  string `json:"name"`
 	Email string `json:"email"`
 }
 
@@ -665,7 +665,7 @@ func (q *Queries) Getuserswithtag(tags string) ([]GetuserswithtagRow, error) {
 	}
 	defer rows.Close()
 
-	items := make([]GetuserswithtagRow, 0, 8) 
+	items := make([]GetuserswithtagRow, 0, 8)
 	for rows.Next() {
 		var item GetuserswithtagRow
 		if err := rows.Scan(&item.Id, &item.Name, &item.Email, &item.Tags); err != nil {
@@ -677,10 +677,10 @@ func (q *Queries) Getuserswithtag(tags string) ([]GetuserswithtagRow, error) {
 }
 
 type GetuserswithtagRow struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
-	Email string `json:"email"`
-	Tags []string `json:"tags"`
+	Id    int64    `json:"id"`
+	Name  string   `json:"name"`
+	Email string   `json:"email"`
+	Tags  []string `json:"tags"`
 }
 
 func (q *Queries) Getuserswithanytag(tags string) ([]GetuserswithanytagRow, error) {
@@ -702,7 +702,7 @@ func (q *Queries) Getuserswithanytag(tags string) ([]GetuserswithanytagRow, erro
 	}
 	defer rows.Close()
 
-	items := make([]GetuserswithanytagRow, 0, 8) 
+	items := make([]GetuserswithanytagRow, 0, 8)
 	for rows.Next() {
 		var item GetuserswithanytagRow
 		if err := rows.Scan(&item.Id, &item.Name, &item.Email, &item.Tags); err != nil {
@@ -714,13 +714,13 @@ func (q *Queries) Getuserswithanytag(tags string) ([]GetuserswithanytagRow, erro
 }
 
 type GetuserswithanytagRow struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
-	Email string `json:"email"`
-	Tags []string `json:"tags"`
+	Id    int64    `json:"id"`
+	Name  string   `json:"name"`
+	Email string   `json:"email"`
+	Tags  []string `json:"tags"`
 }
 
-func (q *Queries) Addusertag(tags []string, id int64) (error) {
+func (q *Queries) Addusertag(tags []string, id int64) error {
 	const query = `UPDATE users SET tags = array_append(tags, $1), updated_at = NOW() WHERE id = $2;`
 	stmt := q.stmts["Addusertag_stmt"]
 	if stmt == nil {
@@ -737,7 +737,7 @@ func (q *Queries) Addusertag(tags []string, id int64) (error) {
 	return err
 }
 
-func (q *Queries) Removeusertag(tags []string, id int64) (error) {
+func (q *Queries) Removeusertag(tags []string, id int64) error {
 	const query = `UPDATE users SET tags = array_remove(tags, $1), updated_at = NOW() WHERE id = $2;`
 	stmt := q.stmts["Removeusertag_stmt"]
 	if stmt == nil {
@@ -784,10 +784,10 @@ func (q *Queries) Getusershippingaddress(id int64) (GetusershippingaddressRow, e
 }
 
 type GetusershippingaddressRow struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
-	Shipping string `json:"shipping"`
-	ShippingCity string `json:"shipping_city"`
+	Id              int64  `json:"id"`
+	Name            string `json:"name"`
+	Shipping        string `json:"shipping"`
+	ShippingCity    string `json:"shipping_city"`
 	ShippingCountry string `json:"shipping_country"`
 }
 
@@ -797,10 +797,10 @@ type UpdateusershippingParams struct {
 	ShippingField3 string `json:"shipping_field3"`
 	ShippingField4 string `json:"shipping_field4"`
 	ShippingField5 string `json:"shipping_field5"`
-	Id int64 `json:"id"`
+	Id             int64  `json:"id"`
 }
 
-func (q *Queries) Updateusershipping(arg UpdateusershippingParams) (error) {
+func (q *Queries) Updateusershipping(arg UpdateusershippingParams) error {
 	const query = `UPDATE users SET shipping = ROW($1, $2, $3, $4, $5), updated_at = NOW() WHERE id = $6;`
 	args := []interface{}{arg.ShippingField1, arg.ShippingField2, arg.ShippingField3, arg.ShippingField4, arg.ShippingField5, arg.Id}
 
@@ -809,9 +809,9 @@ func (q *Queries) Updateusershipping(arg UpdateusershippingParams) (error) {
 }
 
 type GetcomplexuseranalyticsParams struct {
-	TotalPosts string `json:"total_posts"`
+	TotalPosts    string `json:"total_posts"`
 	TotalComments string `json:"total_comments"`
-	Limit int64 `json:"limit"`
+	Limit         int64  `json:"limit"`
 }
 
 func (q *Queries) Getcomplexuseranalytics(arg GetcomplexuseranalyticsParams) ([]GetcomplexuseranalyticsRow, error) {
@@ -833,7 +833,7 @@ func (q *Queries) Getcomplexuseranalytics(arg GetcomplexuseranalyticsParams) ([]
 	}
 	defer rows.Close()
 
-	items := make([]GetcomplexuseranalyticsRow, 0, 8) 
+	items := make([]GetcomplexuseranalyticsRow, 0, 8)
 	for rows.Next() {
 		var item GetcomplexuseranalyticsRow
 		if err := rows.Scan(&item.Id, &item.Name, &item.Email, &item.Role, &item.Isadmin, &item.UserCreatedAt, &item.TotalPosts, &item.PublishedPosts, &item.DraftPosts, &item.TotalComments, &item.PostsCommentedOn, &item.CategoriesUsed, &item.CategoryNames, &item.LastPostDate, &item.LastCommentDate, &item.AvgPostLength, &item.ActivityLevel, &item.EngagementScore); err != nil {
@@ -845,24 +845,24 @@ func (q *Queries) Getcomplexuseranalytics(arg GetcomplexuseranalyticsParams) ([]
 }
 
 type GetcomplexuseranalyticsRow struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
-	Email string `json:"email"`
-	Role UserRole `json:"role"`
-	Isadmin bool `json:"isadmin"`
-	UserCreatedAt time.Time `json:"user_created_at"`
-	TotalPosts int64 `json:"total_posts"`
-	PublishedPosts int64 `json:"published_posts"`
-	DraftPosts int64 `json:"draft_posts"`
-	TotalComments int64 `json:"total_comments"`
-	PostsCommentedOn int64 `json:"posts_commented_on"`
-	CategoriesUsed int64 `json:"categories_used"`
-	CategoryNames string `json:"category_names"`
-	LastPostDate time.Time `json:"last_post_date"`
-	LastCommentDate time.Time `json:"last_comment_date"`
-	AvgPostLength float64 `json:"avg_post_length"`
-	ActivityLevel string `json:"activity_level"`
-	EngagementScore int64 `json:"engagement_score"`
+	Id               int64     `json:"id"`
+	Name             string    `json:"name"`
+	Email            string    `json:"email"`
+	Role             UserRole  `json:"role"`
+	Isadmin          bool      `json:"isadmin"`
+	UserCreatedAt    time.Time `json:"user_created_at"`
+	TotalPosts       int64     `json:"total_posts"`
+	PublishedPosts   int64     `json:"published_posts"`
+	DraftPosts       int64     `json:"draft_posts"`
+	TotalComments    int64     `json:"total_comments"`
+	PostsCommentedOn int64     `json:"posts_commented_on"`
+	CategoriesUsed   int64     `json:"categories_used"`
+	CategoryNames    string    `json:"category_names"`
+	LastPostDate     time.Time `json:"last_post_date"`
+	LastCommentDate  time.Time `json:"last_comment_date"`
+	AvgPostLength    float64   `json:"avg_post_length"`
+	ActivityLevel    string    `json:"activity_level"`
+	EngagementScore  int64     `json:"engagement_score"`
 }
 
 func (q *Queries) Getpostwithactivecommenters(rn string, post_id string) ([]GetpostwithactivecommentersRow, error) {
@@ -884,7 +884,7 @@ func (q *Queries) Getpostwithactivecommenters(rn string, post_id string) ([]Getp
 	}
 	defer rows.Close()
 
-	items := make([]GetpostwithactivecommentersRow, 0, 8) 
+	items := make([]GetpostwithactivecommentersRow, 0, 8)
 	for rows.Next() {
 		var item GetpostwithactivecommentersRow
 		if err := rows.Scan(&item.CommenterName, &item.LastCommentAt); err != nil {
@@ -919,7 +919,7 @@ func (q *Queries) Getuserpostrankings(limit int64) ([]GetuserpostrankingsRow, er
 	}
 	defer rows.Close()
 
-	items := make([]GetuserpostrankingsRow, 0, 8) 
+	items := make([]GetuserpostrankingsRow, 0, 8)
 	for rows.Next() {
 		var item GetuserpostrankingsRow
 		if err := rows.Scan(&item.Id, &item.Name, &item.PostCount, &item.PostRank, &item.DensePostRank, &item.RowNum); err != nil {
@@ -931,12 +931,12 @@ func (q *Queries) Getuserpostrankings(limit int64) ([]GetuserpostrankingsRow, er
 }
 
 type GetuserpostrankingsRow struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
-	PostCount int64 `json:"post_count"`
-	PostRank int64 `json:"post_rank"`
-	DensePostRank int64 `json:"dense_post_rank"`
-	RowNum int64 `json:"row_num"`
+	Id            int64  `json:"id"`
+	Name          string `json:"name"`
+	PostCount     int64  `json:"post_count"`
+	PostRank      int64  `json:"post_rank"`
+	DensePostRank int64  `json:"dense_post_rank"`
+	RowNum        int64  `json:"row_num"`
 }
 
 func (q *Queries) Getusertrendingposts(user_id int64, limit int64) ([]GetusertrendingpostsRow, error) {
@@ -958,7 +958,7 @@ func (q *Queries) Getusertrendingposts(user_id int64, limit int64) ([]Getusertre
 	}
 	defer rows.Close()
 
-	items := make([]GetusertrendingpostsRow, 0, 8) 
+	items := make([]GetusertrendingpostsRow, 0, 8)
 	for rows.Next() {
 		var item GetusertrendingpostsRow
 		if err := rows.Scan(&item.Id, &item.Title, &item.UserId, &item.ViewCount, &item.CreatedAt, &item.PrevViewCount, &item.NextViewCount, &item.ViewDelta); err != nil {
@@ -970,14 +970,14 @@ func (q *Queries) Getusertrendingposts(user_id int64, limit int64) ([]Getusertre
 }
 
 type GetusertrendingpostsRow struct {
-	Id int64 `json:"id"`
-	Title string `json:"title"`
-	UserId int64 `json:"user_id"`
-	ViewCount int64 `json:"view_count"`
-	CreatedAt time.Time `json:"created_at"`
-	PrevViewCount int64 `json:"prev_view_count"`
-	NextViewCount int64 `json:"next_view_count"`
-	ViewDelta float64 `json:"view_delta"`
+	Id            int64     `json:"id"`
+	Title         string    `json:"title"`
+	UserId        int64     `json:"user_id"`
+	ViewCount     int64     `json:"view_count"`
+	CreatedAt     time.Time `json:"created_at"`
+	PrevViewCount int64     `json:"prev_view_count"`
+	NextViewCount int64     `json:"next_view_count"`
+	ViewDelta     float64   `json:"view_delta"`
 }
 
 func (q *Queries) Getpostcountbyuser(user_id string) (GetpostcountbyuserRow, error) {
@@ -1010,7 +1010,7 @@ func (q *Queries) Getpostcountbyuser(user_id string) (GetpostcountbyuserRow, err
 }
 
 type GetpostcountbyuserRow struct {
-	PostCount int64 `json:"post_count"`
+	PostCount    int64 `json:"post_count"`
 	CommentCount int64 `json:"comment_count"`
 }
 
@@ -1033,7 +1033,7 @@ func (q *Queries) Getuserswithmanyposts(count int64) ([]GetuserswithmanypostsRow
 	}
 	defer rows.Close()
 
-	items := make([]GetuserswithmanypostsRow, 0, 8) 
+	items := make([]GetuserswithmanypostsRow, 0, 8)
 	for rows.Next() {
 		var item GetuserswithmanypostsRow
 		if err := rows.Scan(&item.Id, &item.Name, &item.Email, &item.TotalPosts); err != nil {
@@ -1045,10 +1045,10 @@ func (q *Queries) Getuserswithmanyposts(count int64) ([]GetuserswithmanypostsRow
 }
 
 type GetuserswithmanypostsRow struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
-	Email string `json:"email"`
-	TotalPosts int64 `json:"total_posts"`
+	Id         int64  `json:"id"`
+	Name       string `json:"name"`
+	Email      string `json:"email"`
+	TotalPosts int64  `json:"total_posts"`
 }
 
 func (q *Queries) Getpostswithcommentcount(limit int64, offset int64) ([]GetpostswithcommentcountRow, error) {
@@ -1070,7 +1070,7 @@ func (q *Queries) Getpostswithcommentcount(limit int64, offset int64) ([]Getpost
 	}
 	defer rows.Close()
 
-	items := make([]GetpostswithcommentcountRow, 0, 8) 
+	items := make([]GetpostswithcommentcountRow, 0, 8)
 	for rows.Next() {
 		var item GetpostswithcommentcountRow
 		if err := rows.Scan(&item.Id, &item.Title, &item.CreatedAt, &item.CommentCount, &item.UniqueCommenters, &item.LastCommentAt); err != nil {
@@ -1082,12 +1082,12 @@ func (q *Queries) Getpostswithcommentcount(limit int64, offset int64) ([]Getpost
 }
 
 type GetpostswithcommentcountRow struct {
-	Id int64 `json:"id"`
-	Title string `json:"title"`
-	CreatedAt time.Time `json:"created_at"`
-	CommentCount int64 `json:"comment_count"`
-	UniqueCommenters int64 `json:"unique_commenters"`
-	LastCommentAt time.Time `json:"last_comment_at"`
+	Id               int64     `json:"id"`
+	Title            string    `json:"title"`
+	CreatedAt        time.Time `json:"created_at"`
+	CommentCount     int64     `json:"comment_count"`
+	UniqueCommenters int64     `json:"unique_commenters"`
+	LastCommentAt    time.Time `json:"last_comment_at"`
 }
 
 func (q *Queries) Getuserswithactivitylevel() ([]GetuserswithactivitylevelRow, error) {
@@ -1108,7 +1108,7 @@ func (q *Queries) Getuserswithactivitylevel() ([]GetuserswithactivitylevelRow, e
 	}
 	defer rows.Close()
 
-	items := make([]GetuserswithactivitylevelRow, 0, 8) 
+	items := make([]GetuserswithactivitylevelRow, 0, 8)
 	for rows.Next() {
 		var item GetuserswithactivitylevelRow
 		if err := rows.Scan(&item.Id, &item.Name, &item.Email, &item.CreatedAt, &item.AccountAgeCategory, &item.EffectiveRole); err != nil {
@@ -1120,12 +1120,12 @@ func (q *Queries) Getuserswithactivitylevel() ([]GetuserswithactivitylevelRow, e
 }
 
 type GetuserswithactivitylevelRow struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
-	Email string `json:"email"`
-	CreatedAt time.Time `json:"created_at"`
-	AccountAgeCategory string `json:"account_age_category"`
-	EffectiveRole string `json:"effective_role"`
+	Id                 int64     `json:"id"`
+	Name               string    `json:"name"`
+	Email              string    `json:"email"`
+	CreatedAt          time.Time `json:"created_at"`
+	AccountAgeCategory string    `json:"account_age_category"`
+	EffectiveRole      string    `json:"effective_role"`
 }
 
 func (q *Queries) Getpostwithcomments(id int64) ([]GetpostwithcommentsRow, error) {
@@ -1147,7 +1147,7 @@ func (q *Queries) Getpostwithcomments(id int64) ([]GetpostwithcommentsRow, error
 	}
 	defer rows.Close()
 
-	items := make([]GetpostwithcommentsRow, 0, 8) 
+	items := make([]GetpostwithcommentsRow, 0, 8)
 	for rows.Next() {
 		var item GetpostwithcommentsRow
 		if err := rows.Scan(&item.PostId, &item.Title, &item.Content, &item.Author, &item.CommentText, &item.Commenter); err != nil {
@@ -1159,12 +1159,12 @@ func (q *Queries) Getpostwithcomments(id int64) ([]GetpostwithcommentsRow, error
 }
 
 type GetpostwithcommentsRow struct {
-	PostId int64 `json:"post_id"`
-	Title string `json:"title"`
-	Content string `json:"content"`
-	Author string `json:"author"`
+	PostId      int64  `json:"post_id"`
+	Title       string `json:"title"`
+	Content     string `json:"content"`
+	Author      string `json:"author"`
 	CommentText string `json:"comment_text"`
-	Commenter string `json:"commenter"`
+	Commenter   string `json:"commenter"`
 }
 
 func (q *Queries) Getpostdetailswithallrelations(id int64) (GetpostdetailswithallrelationsRow, error) {
@@ -1197,26 +1197,26 @@ func (q *Queries) Getpostdetailswithallrelations(id int64) (Getpostdetailswithal
 }
 
 type GetpostdetailswithallrelationsRow struct {
-	Id int64 `json:"id"`
-	Title string `json:"title"`
-	Content string `json:"content"`
-	Status PostStatus `json:"status"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	AuthorId int64 `json:"author_id"`
-	AuthorName string `json:"author_name"`
-	AuthorEmail string `json:"author_email"`
-	AuthorRole UserRole `json:"author_role"`
-	AuthorIsAdmin bool `json:"author_is_admin"`
-	CategoryId int64 `json:"category_id"`
-	CategoryName string `json:"category_name"`
-	CommentCount int64 `json:"comment_count"`
-	UniqueCommenters int64 `json:"unique_commenters"`
-	AllComments string `json:"all_comments"`
-	CommenterNames []string `json:"commenter_names"`
-	LastCommentDate time.Time `json:"last_comment_date"`
-	ContentLength int64 `json:"content_length"`
-	HoursSinceCreated float64 `json:"hours_since_created"`
+	Id                int64      `json:"id"`
+	Title             string     `json:"title"`
+	Content           string     `json:"content"`
+	Status            PostStatus `json:"status"`
+	CreatedAt         time.Time  `json:"created_at"`
+	UpdatedAt         time.Time  `json:"updated_at"`
+	AuthorId          int64      `json:"author_id"`
+	AuthorName        string     `json:"author_name"`
+	AuthorEmail       string     `json:"author_email"`
+	AuthorRole        UserRole   `json:"author_role"`
+	AuthorIsAdmin     bool       `json:"author_is_admin"`
+	CategoryId        int64      `json:"category_id"`
+	CategoryName      string     `json:"category_name"`
+	CommentCount      int64      `json:"comment_count"`
+	UniqueCommenters  int64      `json:"unique_commenters"`
+	AllComments       string     `json:"all_comments"`
+	CommenterNames    []string   `json:"commenter_names"`
+	LastCommentDate   time.Time  `json:"last_comment_date"`
+	ContentLength     int64      `json:"content_length"`
+	HoursSinceCreated float64    `json:"hours_since_created"`
 }
 
 func (q *Queries) Countusersbyrole(role UserRole) (int64, error) {
@@ -1277,8 +1277,8 @@ func (q *Queries) Countusers() (CountusersRow, error) {
 }
 
 type CountusersRow struct {
-	TotalUsers int64 `json:"total_users"`
-	AdminCount int64 `json:"admin_count"`
+	TotalUsers   int64 `json:"total_users"`
+	AdminCount   int64 `json:"admin_count"`
 	RegularCount int64 `json:"regular_count"`
 }
 
@@ -1300,7 +1300,7 @@ func (q *Queries) Getuserrolecount() ([]GetuserrolecountRow, error) {
 	}
 	defer rows.Close()
 
-	items := make([]GetuserrolecountRow, 0, 8) 
+	items := make([]GetuserrolecountRow, 0, 8)
 	for rows.Next() {
 		var item GetuserrolecountRow
 		if err := rows.Scan(&item.Role, &item.Count); err != nil {
@@ -1312,8 +1312,8 @@ func (q *Queries) Getuserrolecount() ([]GetuserrolecountRow, error) {
 }
 
 type GetuserrolecountRow struct {
-	Role UserRole `json:"role"`
-	Count int64 `json:"count"`
+	Role  UserRole `json:"role"`
+	Count int64    `json:"count"`
 }
 
 func (q *Queries) Getuseragestats() (GetuseragestatsRow, error) {
@@ -1345,11 +1345,11 @@ func (q *Queries) Getuseragestats() (GetuseragestatsRow, error) {
 }
 
 type GetuseragestatsRow struct {
-	FirstJoined time.Time `json:"first_joined"`
-	LastJoined time.Time `json:"last_joined"`
-	Total int64 `json:"total"`
-	AvgAge float64 `json:"avg_age"`
-	AvgNameLength float64 `json:"avg_name_length"`
+	FirstJoined   time.Time `json:"first_joined"`
+	LastJoined    time.Time `json:"last_joined"`
+	Total         int64     `json:"total"`
+	AvgAge        float64   `json:"avg_age"`
+	AvgNameLength float64   `json:"avg_name_length"`
 }
 
 func (q *Queries) Getpostsgroupedbystatus(count_threshold int64) ([]GetpostsgroupedbystatusRow, error) {
@@ -1371,7 +1371,7 @@ func (q *Queries) Getpostsgroupedbystatus(count_threshold int64) ([]Getpostsgrou
 	}
 	defer rows.Close()
 
-	items := make([]GetpostsgroupedbystatusRow, 0, 8) 
+	items := make([]GetpostsgroupedbystatusRow, 0, 8)
 	for rows.Next() {
 		var item GetpostsgroupedbystatusRow
 		if err := rows.Scan(&item.Status, &item.Count, &item.Oldest, &item.Newest); err != nil {
@@ -1384,9 +1384,9 @@ func (q *Queries) Getpostsgroupedbystatus(count_threshold int64) ([]Getpostsgrou
 
 type GetpostsgroupedbystatusRow struct {
 	Status PostStatus `json:"status"`
-	Count int64 `json:"count"`
-	Oldest time.Time `json:"oldest"`
-	Newest time.Time `json:"newest"`
+	Count  int64      `json:"count"`
+	Oldest time.Time  `json:"oldest"`
+	Newest time.Time  `json:"newest"`
 }
 
 func (q *Queries) Getdistinctcommenters() ([]GetdistinctcommentersRow, error) {
@@ -1407,7 +1407,7 @@ func (q *Queries) Getdistinctcommenters() ([]GetdistinctcommentersRow, error) {
 	}
 	defer rows.Close()
 
-	items := make([]GetdistinctcommentersRow, 0, 8) 
+	items := make([]GetdistinctcommentersRow, 0, 8)
 	for rows.Next() {
 		var item GetdistinctcommentersRow
 		if err := rows.Scan(&item.Id, &item.Name, &item.Email); err != nil {
@@ -1419,8 +1419,8 @@ func (q *Queries) Getdistinctcommenters() ([]GetdistinctcommentersRow, error) {
 }
 
 type GetdistinctcommentersRow struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
+	Id    int64  `json:"id"`
+	Name  string `json:"name"`
 	Email string `json:"email"`
 }
 
@@ -1442,7 +1442,7 @@ func (q *Queries) Getlatestpostperuser() ([]GetlatestpostperuserRow, error) {
 	}
 	defer rows.Close()
 
-	items := make([]GetlatestpostperuserRow, 0, 8) 
+	items := make([]GetlatestpostperuserRow, 0, 8)
 	for rows.Next() {
 		var item GetlatestpostperuserRow
 		if err := rows.Scan(&item.UserId, &item.PostId, &item.Title, &item.Status, &item.CreatedAt); err != nil {
@@ -1454,18 +1454,18 @@ func (q *Queries) Getlatestpostperuser() ([]GetlatestpostperuserRow, error) {
 }
 
 type GetlatestpostperuserRow struct {
-	UserId int64 `json:"user_id"`
-	PostId int64 `json:"post_id"`
-	Title string `json:"title"`
-	Status PostStatus `json:"status"`
-	CreatedAt time.Time `json:"created_at"`
+	UserId    int64      `json:"user_id"`
+	PostId    int64      `json:"post_id"`
+	Title     string     `json:"title"`
+	Status    PostStatus `json:"status"`
+	CreatedAt time.Time  `json:"created_at"`
 }
 
 type SearchusersParams struct {
-	Name string `json:"name"`
-	Email string `json:"email"`
-	Limit int64 `json:"limit"`
-	Offset int64 `json:"offset"`
+	Name   string `json:"name"`
+	Email  string `json:"email"`
+	Limit  int64  `json:"limit"`
+	Offset int64  `json:"offset"`
 }
 
 func (q *Queries) Searchusers(arg SearchusersParams) ([]SearchusersRow, error) {
@@ -1478,7 +1478,7 @@ func (q *Queries) Searchusers(arg SearchusersParams) ([]SearchusersRow, error) {
 	}
 	defer rows.Close()
 
-	items := make([]SearchusersRow, 0, 8) 
+	items := make([]SearchusersRow, 0, 8)
 	for rows.Next() {
 		var item SearchusersRow
 		if err := rows.Scan(&item.Id, &item.Name, &item.Email); err != nil {
@@ -1490,15 +1490,15 @@ func (q *Queries) Searchusers(arg SearchusersParams) ([]SearchusersRow, error) {
 }
 
 type SearchusersRow struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
+	Id    int64  `json:"id"`
+	Name  string `json:"name"`
 	Email string `json:"email"`
 }
 
 type SearchpostsbytitleParams struct {
-	Title string `json:"title"`
-	Limit int64 `json:"limit"`
-	Offset int64 `json:"offset"`
+	Title  string `json:"title"`
+	Limit  int64  `json:"limit"`
+	Offset int64  `json:"offset"`
 }
 
 func (q *Queries) Searchpostsbytitle(arg SearchpostsbytitleParams) ([]SearchpostsbytitleRow, error) {
@@ -1520,7 +1520,7 @@ func (q *Queries) Searchpostsbytitle(arg SearchpostsbytitleParams) ([]Searchpost
 	}
 	defer rows.Close()
 
-	items := make([]SearchpostsbytitleRow, 0, 8) 
+	items := make([]SearchpostsbytitleRow, 0, 8)
 	for rows.Next() {
 		var item SearchpostsbytitleRow
 		if err := rows.Scan(&item.Id, &item.Title, &item.Status, &item.CreatedAt); err != nil {
@@ -1532,10 +1532,10 @@ func (q *Queries) Searchpostsbytitle(arg SearchpostsbytitleParams) ([]Searchpost
 }
 
 type SearchpostsbytitleRow struct {
-	Id int64 `json:"id"`
-	Title string `json:"title"`
-	Status PostStatus `json:"status"`
-	CreatedAt time.Time `json:"created_at"`
+	Id        int64      `json:"id"`
+	Title     string     `json:"title"`
+	Status    PostStatus `json:"status"`
+	CreatedAt time.Time  `json:"created_at"`
 }
 
 func (q *Queries) Fulltextsearchposts(search_query string, limit int64) ([]FulltextsearchpostsRow, error) {
@@ -1557,7 +1557,7 @@ func (q *Queries) Fulltextsearchposts(search_query string, limit int64) ([]Fullt
 	}
 	defer rows.Close()
 
-	items := make([]FulltextsearchpostsRow, 0, 8) 
+	items := make([]FulltextsearchpostsRow, 0, 8)
 	for rows.Next() {
 		var item FulltextsearchpostsRow
 		if err := rows.Scan(&item.Id, &item.Title, &item.Rank); err != nil {
@@ -1569,9 +1569,9 @@ func (q *Queries) Fulltextsearchposts(search_query string, limit int64) ([]Fullt
 }
 
 type FulltextsearchpostsRow struct {
-	Id int64 `json:"id"`
-	Title string `json:"title"`
-	Rank float64 `json:"rank"`
+	Id    int64   `json:"id"`
+	Title string  `json:"title"`
+	Rank  float64 `json:"rank"`
 }
 
 func (q *Queries) Getuserregistrationstats() ([]GetuserregistrationstatsRow, error) {
@@ -1592,7 +1592,7 @@ func (q *Queries) Getuserregistrationstats() ([]GetuserregistrationstatsRow, err
 	}
 	defer rows.Close()
 
-	items := make([]GetuserregistrationstatsRow, 0, 8) 
+	items := make([]GetuserregistrationstatsRow, 0, 8)
 	for rows.Next() {
 		var item GetuserregistrationstatsRow
 		if err := rows.Scan(&item.Year, &item.Month, &item.Signups); err != nil {
@@ -1604,8 +1604,8 @@ func (q *Queries) Getuserregistrationstats() ([]GetuserregistrationstatsRow, err
 }
 
 type GetuserregistrationstatsRow struct {
-	Year int64 `json:"year"`
-	Month int64 `json:"month"`
+	Year    int64 `json:"year"`
+	Month   int64 `json:"month"`
 	Signups int64 `json:"signups"`
 }
 
@@ -1628,7 +1628,7 @@ func (q *Queries) Getweeklypoststats(created_at time.Time) ([]Getweeklypoststats
 	}
 	defer rows.Close()
 
-	items := make([]GetweeklypoststatsRow, 0, 8) 
+	items := make([]GetweeklypoststatsRow, 0, 8)
 	for rows.Next() {
 		var item GetweeklypoststatsRow
 		if err := rows.Scan(&item.WeekStart, &item.PostsCreated, &item.TotalViews); err != nil {
@@ -1640,9 +1640,9 @@ func (q *Queries) Getweeklypoststats(created_at time.Time) ([]Getweeklypoststats
 }
 
 type GetweeklypoststatsRow struct {
-	WeekStart string `json:"week_start"`
-	PostsCreated int64 `json:"posts_created"`
-	TotalViews int64 `json:"total_views"`
+	WeekStart    string `json:"week_start"`
+	PostsCreated int64  `json:"posts_created"`
+	TotalViews   int64  `json:"total_views"`
 }
 
 func (q *Queries) Getusersinids(id int64) ([]Users, error) {
@@ -1664,7 +1664,7 @@ func (q *Queries) Getusersinids(id int64) ([]Users, error) {
 	}
 	defer rows.Close()
 
-	items := make([]Users, 0, 8) 
+	items := make([]Users, 0, 8)
 	for rows.Next() {
 		var item Users
 		if err := rows.Scan(&item.Id, &item.Name, &item.Address, &item.Isadmin, &item.Age, &item.AgeRange, &item.Bio, &item.Email, &item.Preferences, &item.Tags, &item.AvatarHash, &item.Shipping, &item.CreatedAt, &item.UpdatedAt, &item.Role); err != nil {
@@ -1694,7 +1694,7 @@ func (q *Queries) Getusersbynames(name string) ([]GetusersbynamesRow, error) {
 	}
 	defer rows.Close()
 
-	items := make([]GetusersbynamesRow, 0, 8) 
+	items := make([]GetusersbynamesRow, 0, 8)
 	for rows.Next() {
 		var item GetusersbynamesRow
 		if err := rows.Scan(&item.Id, &item.Name, &item.Email); err != nil {
@@ -1706,8 +1706,8 @@ func (q *Queries) Getusersbynames(name string) ([]GetusersbynamesRow, error) {
 }
 
 type GetusersbynamesRow struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
+	Id    int64  `json:"id"`
+	Name  string `json:"name"`
 	Email string `json:"email"`
 }
 
@@ -1729,7 +1729,7 @@ func (q *Queries) Getuserswhocommented() ([]GetuserswhocommentedRow, error) {
 	}
 	defer rows.Close()
 
-	items := make([]GetuserswhocommentedRow, 0, 8) 
+	items := make([]GetuserswhocommentedRow, 0, 8)
 	for rows.Next() {
 		var item GetuserswhocommentedRow
 		if err := rows.Scan(&item.Id, &item.Name, &item.Email); err != nil {
@@ -1741,8 +1741,8 @@ func (q *Queries) Getuserswhocommented() ([]GetuserswhocommentedRow, error) {
 }
 
 type GetuserswhocommentedRow struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
+	Id    int64  `json:"id"`
+	Name  string `json:"name"`
 	Email string `json:"email"`
 }
 
@@ -1764,7 +1764,7 @@ func (q *Queries) Getuserswithnoposts() ([]GetuserswithnopostsRow, error) {
 	}
 	defer rows.Close()
 
-	items := make([]GetuserswithnopostsRow, 0, 8) 
+	items := make([]GetuserswithnopostsRow, 0, 8)
 	for rows.Next() {
 		var item GetuserswithnopostsRow
 		if err := rows.Scan(&item.Id, &item.Name, &item.Email); err != nil {
@@ -1776,8 +1776,8 @@ func (q *Queries) Getuserswithnoposts() ([]GetuserswithnopostsRow, error) {
 }
 
 type GetuserswithnopostsRow struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
+	Id    int64  `json:"id"`
+	Name  string `json:"name"`
 	Email string `json:"email"`
 }
 
@@ -1791,7 +1791,7 @@ func (q *Queries) Getallcontentbyuser(user_id int64, limit int64) ([]Getallconte
 	}
 	defer rows.Close()
 
-	items := make([]GetallcontentbyuserRow, 0, 8) 
+	items := make([]GetallcontentbyuserRow, 0, 8)
 	for rows.Next() {
 		var item GetallcontentbyuserRow
 		if err := rows.Scan(&item.ContentType, &item.ContentId, &item.ContentSummary, &item.CreatedAt); err != nil {
@@ -1803,10 +1803,10 @@ func (q *Queries) Getallcontentbyuser(user_id int64, limit int64) ([]Getallconte
 }
 
 type GetallcontentbyuserRow struct {
-	ContentType string `json:"content_type"`
-	ContentId string `json:"content_id"`
-	ContentSummary string `json:"content_summary"`
-	CreatedAt time.Time `json:"created_at"`
+	ContentType    string    `json:"content_type"`
+	ContentId      string    `json:"content_id"`
+	ContentSummary string    `json:"content_summary"`
+	CreatedAt      time.Time `json:"created_at"`
 }
 
 func (q *Queries) Getactiveusers(limit int64) ([]ActiveUsers, error) {
@@ -1828,7 +1828,7 @@ func (q *Queries) Getactiveusers(limit int64) ([]ActiveUsers, error) {
 	}
 	defer rows.Close()
 
-	items := make([]ActiveUsers, 0, 8) 
+	items := make([]ActiveUsers, 0, 8)
 	for rows.Next() {
 		var item ActiveUsers
 		if err := rows.Scan(&item.Id, &item.Name, &item.Email, &item.Role, &item.CreatedAt); err != nil {
@@ -1858,7 +1858,7 @@ func (q *Queries) Getuseractivitysummary(post_count int64, comment_count int64) 
 	}
 	defer rows.Close()
 
-	items := make([]UserActivitySummary, 0, 8) 
+	items := make([]UserActivitySummary, 0, 8)
 	for rows.Next() {
 		var item UserActivitySummary
 		if err := rows.Scan(&item.Id, &item.Name, &item.Email, &item.PostCount, &item.CommentCount, &item.LastPostAt, &item.UserType); err != nil {
@@ -1869,7 +1869,7 @@ func (q *Queries) Getuseractivitysummary(post_count int64, comment_count int64) 
 	return items, rows.Err()
 }
 
-func (q *Queries) Refreshpoststats() (error) {
+func (q *Queries) Refreshpoststats() error {
 	const query = `REFRESH MATERIALIZED VIEW CONCURRENTLY post_stats;`
 	stmt := q.stmts["Refreshpoststats_stmt"]
 	if stmt == nil {
@@ -1904,7 +1904,7 @@ func (q *Queries) Getpoststats(limit int64) ([]PostStats, error) {
 	}
 	defer rows.Close()
 
-	items := make([]PostStats, 0, 8) 
+	items := make([]PostStats, 0, 8)
 	for rows.Next() {
 		var item PostStats
 		if err := rows.Scan(&item.PostId, &item.Title, &item.CommentCount, &item.UniqueCommenters, &item.LastCommentAt); err != nil {
@@ -1934,7 +1934,7 @@ func (q *Queries) Getusersubscriptions(user_id int64) ([]GetusersubscriptionsRow
 	}
 	defer rows.Close()
 
-	items := make([]GetusersubscriptionsRow, 0, 8) 
+	items := make([]GetusersubscriptionsRow, 0, 8)
 	for rows.Next() {
 		var item GetusersubscriptionsRow
 		if err := rows.Scan(&item.Id, &item.Tier, &item.StartedAt, &item.ExpiresAt, &item.AutoRenew); err != nil {
@@ -1946,18 +1946,18 @@ func (q *Queries) Getusersubscriptions(user_id int64) ([]GetusersubscriptionsRow
 }
 
 type GetusersubscriptionsRow struct {
-	Id int64 `json:"id"`
-	Tier SubscriptionTier `json:"tier"`
-	StartedAt time.Time `json:"started_at"`
-	ExpiresAt time.Time `json:"expires_at"`
-	AutoRenew bool `json:"auto_renew"`
+	Id        int64            `json:"id"`
+	Tier      SubscriptionTier `json:"tier"`
+	StartedAt time.Time        `json:"started_at"`
+	ExpiresAt time.Time        `json:"expires_at"`
+	AutoRenew bool             `json:"auto_renew"`
 }
 
 type CreatesubscriptionParams struct {
-	UserId int64 `json:"user_id"`
-	Tier SubscriptionTier `json:"tier"`
-	ExpiresAt time.Time `json:"expires_at"`
-	AutoRenew bool `json:"auto_renew"`
+	UserId    int64            `json:"user_id"`
+	Tier      SubscriptionTier `json:"tier"`
+	ExpiresAt time.Time        `json:"expires_at"`
+	AutoRenew bool             `json:"auto_renew"`
 }
 
 func (q *Queries) Createsubscription(arg CreatesubscriptionParams) (Subscriptions, error) {
@@ -1999,7 +1999,7 @@ func (q *Queries) Getordersbyuser(user_id int64, limit int64) ([]Getordersbyuser
 	}
 	defer rows.Close()
 
-	items := make([]GetordersbyuserRow, 0, 8) 
+	items := make([]GetordersbyuserRow, 0, 8)
 	for rows.Next() {
 		var item GetordersbyuserRow
 		if err := rows.Scan(&item.Id, &item.TotalAmount, &item.DiscountPct, &item.State, &item.ShippingAddr, &item.PlacedAt); err != nil {
@@ -2011,12 +2011,12 @@ func (q *Queries) Getordersbyuser(user_id int64, limit int64) ([]Getordersbyuser
 }
 
 type GetordersbyuserRow struct {
-	Id uuid.UUID `json:"id"`
-	TotalAmount float64 `json:"total_amount"`
-	DiscountPct string `json:"discount_pct"`
-	State OrderState `json:"state"`
-	ShippingAddr string `json:"shipping_addr"`
-	PlacedAt time.Time `json:"placed_at"`
+	Id           uuid.UUID  `json:"id"`
+	TotalAmount  float64    `json:"total_amount"`
+	DiscountPct  string     `json:"discount_pct"`
+	State        OrderState `json:"state"`
+	ShippingAddr string     `json:"shipping_addr"`
+	PlacedAt     time.Time  `json:"placed_at"`
 }
 
 func (q *Queries) Getordersinstate(state OrderState, limit int64) ([]GetordersinstateRow, error) {
@@ -2038,7 +2038,7 @@ func (q *Queries) Getordersinstate(state OrderState, limit int64) ([]Getordersin
 	}
 	defer rows.Close()
 
-	items := make([]GetordersinstateRow, 0, 8) 
+	items := make([]GetordersinstateRow, 0, 8)
 	for rows.Next() {
 		var item GetordersinstateRow
 		if err := rows.Scan(&item.Id, &item.UserId, &item.UserName, &item.TotalAmount, &item.State, &item.PlacedAt); err != nil {
@@ -2050,18 +2050,18 @@ func (q *Queries) Getordersinstate(state OrderState, limit int64) ([]Getordersin
 }
 
 type GetordersinstateRow struct {
-	Id uuid.UUID `json:"id"`
-	UserId int64 `json:"user_id"`
-	UserName string `json:"user_name"`
-	TotalAmount float64 `json:"total_amount"`
-	State OrderState `json:"state"`
-	PlacedAt time.Time `json:"placed_at"`
+	Id          uuid.UUID  `json:"id"`
+	UserId      int64      `json:"user_id"`
+	UserName    string     `json:"user_name"`
+	TotalAmount float64    `json:"total_amount"`
+	State       OrderState `json:"state"`
+	PlacedAt    time.Time  `json:"placed_at"`
 }
 
 type GetauditlogforuserParams struct {
 	ChangedBy int64 `json:"changed_by"`
-	Limit int64 `json:"limit"`
-	Offset int64 `json:"offset"`
+	Limit     int64 `json:"limit"`
+	Offset    int64 `json:"offset"`
 }
 
 func (q *Queries) Getauditlogforuser(arg GetauditlogforuserParams) ([]GetauditlogforuserRow, error) {
@@ -2083,7 +2083,7 @@ func (q *Queries) Getauditlogforuser(arg GetauditlogforuserParams) ([]Getauditlo
 	}
 	defer rows.Close()
 
-	items := make([]GetauditlogforuserRow, 0, 8) 
+	items := make([]GetauditlogforuserRow, 0, 8)
 	for rows.Next() {
 		var item GetauditlogforuserRow
 		if err := rows.Scan(&item.Id, &item.TableName, &item.RecordId, &item.Action, &item.OldData, &item.NewData, &item.ChangedAt); err != nil {
@@ -2095,12 +2095,12 @@ func (q *Queries) Getauditlogforuser(arg GetauditlogforuserParams) ([]Getauditlo
 }
 
 type GetauditlogforuserRow struct {
-	Id int64 `json:"id"`
-	TableName string `json:"table_name"`
-	RecordId string `json:"record_id"`
-	Action string `json:"action"`
-	OldData []byte `json:"old_data"`
-	NewData []byte `json:"new_data"`
+	Id        int64     `json:"id"`
+	TableName string    `json:"table_name"`
+	RecordId  string    `json:"record_id"`
+	Action    string    `json:"action"`
+	OldData   []byte    `json:"old_data"`
+	NewData   []byte    `json:"new_data"`
 	ChangedAt time.Time `json:"changed_at"`
 }
 
@@ -2123,7 +2123,7 @@ func (q *Queries) Getauditlogfortable(table_name string, limit int64) ([]Getaudi
 	}
 	defer rows.Close()
 
-	items := make([]GetauditlogfortableRow, 0, 8) 
+	items := make([]GetauditlogfortableRow, 0, 8)
 	for rows.Next() {
 		var item GetauditlogfortableRow
 		if err := rows.Scan(&item.Id, &item.TableName, &item.RecordId, &item.Action, &item.ChangedBy, &item.ChangedAt); err != nil {
@@ -2135,11 +2135,11 @@ func (q *Queries) Getauditlogfortable(table_name string, limit int64) ([]Getaudi
 }
 
 type GetauditlogfortableRow struct {
-	Id int64 `json:"id"`
-	TableName string `json:"table_name"`
-	RecordId string `json:"record_id"`
-	Action string `json:"action"`
-	ChangedBy int64 `json:"changed_by"`
+	Id        int64     `json:"id"`
+	TableName string    `json:"table_name"`
+	RecordId  string    `json:"record_id"`
+	Action    string    `json:"action"`
+	ChangedBy int64     `json:"changed_by"`
 	ChangedAt time.Time `json:"changed_at"`
 }
 
@@ -2172,14 +2172,14 @@ func (q *Queries) Getdashboardstats() (GetdashboardstatsRow, error) {
 }
 
 type GetdashboardstatsRow struct {
-	TotalUsers int64 `json:"total_users"`
-	TotalPosts int64 `json:"total_posts"`
-	TotalComments int64 `json:"total_comments"`
-	PublishedPosts int64 `json:"published_posts"`
-	PostsThisWeek int64 `json:"posts_this_week"`
+	TotalUsers      int64 `json:"total_users"`
+	TotalPosts      int64 `json:"total_posts"`
+	TotalComments   int64 `json:"total_comments"`
+	PublishedPosts  int64 `json:"published_posts"`
+	PostsThisWeek   int64 `json:"posts_this_week"`
 	SignupsThisWeek int64 `json:"signups_this_week"`
 	CommentsLast24h int64 `json:"comments_last_24h"`
-	PendingOrders int64 `json:"pending_orders"`
+	PendingOrders   int64 `json:"pending_orders"`
 }
 
 func (q *Queries) Gettopcommenters(limit int64) ([]GettopcommentersRow, error) {
@@ -2201,7 +2201,7 @@ func (q *Queries) Gettopcommenters(limit int64) ([]GettopcommentersRow, error) {
 	}
 	defer rows.Close()
 
-	items := make([]GettopcommentersRow, 0, 8) 
+	items := make([]GettopcommentersRow, 0, 8)
 	for rows.Next() {
 		var item GettopcommentersRow
 		if err := rows.Scan(&item.Id, &item.Name, &item.Email, &item.CommentCount, &item.Rank); err != nil {
@@ -2213,11 +2213,11 @@ func (q *Queries) Gettopcommenters(limit int64) ([]GettopcommentersRow, error) {
 }
 
 type GettopcommentersRow struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
-	Email string `json:"email"`
-	CommentCount int64 `json:"comment_count"`
-	Rank int64 `json:"rank"`
+	Id           int64  `json:"id"`
+	Name         string `json:"name"`
+	Email        string `json:"email"`
+	CommentCount int64  `json:"comment_count"`
+	Rank         int64  `json:"rank"`
 }
 
 func (q *Queries) Getengagementtimeseries(created_at_start time.Time) ([]GetengagementtimeseriesRow, error) {
@@ -2230,7 +2230,7 @@ func (q *Queries) Getengagementtimeseries(created_at_start time.Time) ([]Getenga
 	}
 	defer rows.Close()
 
-	items := make([]GetengagementtimeseriesRow, 0, 8) 
+	items := make([]GetengagementtimeseriesRow, 0, 8)
 	for rows.Next() {
 		var item GetengagementtimeseriesRow
 		if err := rows.Scan(&item.Day, &item.Count, &item.EventType); err != nil {
@@ -2242,8 +2242,8 @@ func (q *Queries) Getengagementtimeseries(created_at_start time.Time) ([]Getenga
 }
 
 type GetengagementtimeseriesRow struct {
-	Day string `json:"day"`
-	Count int64 `json:"count"`
+	Day       string `json:"day"`
+	Count     int64  `json:"count"`
 	EventType string `json:"event_type"`
 }
 
@@ -2277,10 +2277,10 @@ func (q *Queries) Createcategory(name string) (Categories, error) {
 }
 
 type CreatepostParams struct {
-	UserId int64 `json:"user_id"`
-	CategoryId int64 `json:"category_id"`
-	Title string `json:"title"`
-	Content string `json:"content"`
+	UserId     int64  `json:"user_id"`
+	CategoryId int64  `json:"category_id"`
+	Title      string `json:"title"`
+	Content    string `json:"content"`
 }
 
 func (q *Queries) Createpost(arg CreatepostParams) (Posts, error) {
@@ -2304,8 +2304,8 @@ func (q *Queries) Createpost(arg CreatepostParams) (Posts, error) {
 }
 
 type CreatecommentParams struct {
-	PostId int64 `json:"post_id"`
-	UserId int64 `json:"user_id"`
+	PostId  int64  `json:"post_id"`
+	UserId  int64  `json:"user_id"`
 	Content string `json:"content"`
 }
 
@@ -2338,7 +2338,7 @@ func (q *Queries) Createcomment(arg CreatecommentParams) (Comments, error) {
 	return result, err
 }
 
-func (q *Queries) Deleteoldusers(created_at time.Time) (error) {
+func (q *Queries) Deleteoldusers(created_at time.Time) error {
 	const query = `DELETE FROM users WHERE created_at < $1 AND isadmin = FALSE;`
 	stmt := q.stmts["Deleteoldusers_stmt"]
 	if stmt == nil {
@@ -2355,7 +2355,7 @@ func (q *Queries) Deleteoldusers(created_at time.Time) (error) {
 	return err
 }
 
-func (q *Queries) Updateusertimestamp(updated_at time.Time, id int64) (error) {
+func (q *Queries) Updateusertimestamp(updated_at time.Time, id int64) error {
 	const query = `UPDATE users SET updated_at = $1 WHERE id = $2;`
 	stmt := q.stmts["Updateusertimestamp_stmt"]
 	if stmt == nil {
@@ -2373,10 +2373,10 @@ func (q *Queries) Updateusertimestamp(updated_at time.Time, id int64) (error) {
 }
 
 type CreatenotificationParams struct {
-	UserId int64 `json:"user_id"`
-	Type string `json:"type_"`
-	Title string `json:"title"`
-	Body string `json:"body"`
+	UserId   int64  `json:"user_id"`
+	Type     string `json:"type_"`
+	Title    string `json:"title"`
+	Body     string `json:"body"`
 	Metadata []byte `json:"metadata"`
 }
 
@@ -2402,7 +2402,7 @@ func (q *Queries) Createnotification(arg CreatenotificationParams) (Notification
 
 type GetnotificationsbyuserParams struct {
 	UserId int64 `json:"user_id"`
-	Limit int64 `json:"limit"`
+	Limit  int64 `json:"limit"`
 	Offset int64 `json:"offset"`
 }
 
@@ -2425,7 +2425,7 @@ func (q *Queries) Getnotificationsbyuser(arg GetnotificationsbyuserParams) ([]No
 	}
 	defer rows.Close()
 
-	items := make([]Notifications, 0, 8) 
+	items := make([]Notifications, 0, 8)
 	for rows.Next() {
 		var item Notifications
 		if err := rows.Scan(&item.Id, &item.UserId, &item.Type, &item.Title, &item.Body, &item.IsRead, &item.Metadata, &item.CreatedAt); err != nil {
@@ -2465,7 +2465,7 @@ func (q *Queries) Getunreadcount(user_id int64) (int64, error) {
 	return result, err
 }
 
-func (q *Queries) Marknotificationread(id int64, user_id int64) (error) {
+func (q *Queries) Marknotificationread(id int64, user_id int64) error {
 	const query = `UPDATE notifications SET is_read = TRUE WHERE id = $1 AND user_id = $2;`
 	stmt := q.stmts["Marknotificationread_stmt"]
 	if stmt == nil {
@@ -2482,7 +2482,7 @@ func (q *Queries) Marknotificationread(id int64, user_id int64) (error) {
 	return err
 }
 
-func (q *Queries) Markallnotificationsread(user_id int64) (error) {
+func (q *Queries) Markallnotificationsread(user_id int64) error {
 	const query = `UPDATE notifications SET is_read = TRUE WHERE user_id = $1 AND is_read = FALSE;`
 	stmt := q.stmts["Markallnotificationsread_stmt"]
 	if stmt == nil {
@@ -2499,7 +2499,7 @@ func (q *Queries) Markallnotificationsread(user_id int64) (error) {
 	return err
 }
 
-func (q *Queries) Deleteoldnotifications(user_id int64, created_at time.Time) (error) {
+func (q *Queries) Deleteoldnotifications(user_id int64, created_at time.Time) error {
 	const query = `DELETE FROM notifications WHERE user_id = $1 AND created_at < $2;`
 	stmt := q.stmts["Deleteoldnotifications_stmt"]
 	if stmt == nil {
@@ -2517,9 +2517,9 @@ func (q *Queries) Deleteoldnotifications(user_id int64, created_at time.Time) (e
 }
 
 type GetnotificationsbytypeParams struct {
-	UserId int64 `json:"user_id"`
-	Type string `json:"type_"`
-	Limit int64 `json:"limit"`
+	UserId int64  `json:"user_id"`
+	Type   string `json:"type_"`
+	Limit  int64  `json:"limit"`
 }
 
 func (q *Queries) Getnotificationsbytype(arg GetnotificationsbytypeParams) ([]GetnotificationsbytypeRow, error) {
@@ -2541,7 +2541,7 @@ func (q *Queries) Getnotificationsbytype(arg GetnotificationsbytypeParams) ([]Ge
 	}
 	defer rows.Close()
 
-	items := make([]GetnotificationsbytypeRow, 0, 8) 
+	items := make([]GetnotificationsbytypeRow, 0, 8)
 	for rows.Next() {
 		var item GetnotificationsbytypeRow
 		if err := rows.Scan(&item.Id, &item.Type, &item.Title, &item.Body, &item.IsRead, &item.CreatedAt); err != nil {
@@ -2553,17 +2553,17 @@ func (q *Queries) Getnotificationsbytype(arg GetnotificationsbytypeParams) ([]Ge
 }
 
 type GetnotificationsbytypeRow struct {
-	Id int64 `json:"id"`
-	Type string `json:"type"`
-	Title string `json:"title"`
-	Body string `json:"body"`
-	IsRead bool `json:"is_read"`
+	Id        int64     `json:"id"`
+	Type      string    `json:"type"`
+	Title     string    `json:"title"`
+	Body      string    `json:"body"`
+	IsRead    bool      `json:"is_read"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
 type CreatetagParams struct {
-	Name string `json:"name"`
-	Slug string `json:"slug"`
+	Name  string `json:"name"`
+	Slug  string `json:"slug"`
 	Color string `json:"color"`
 }
 
@@ -2643,7 +2643,7 @@ func (q *Queries) Getalltags() ([]Tags, error) {
 	}
 	defer rows.Close()
 
-	items := make([]Tags, 0, 8) 
+	items := make([]Tags, 0, 8)
 	for rows.Next() {
 		var item Tags
 		if err := rows.Scan(&item.Id, &item.Name, &item.Slug, &item.Color); err != nil {
@@ -2654,7 +2654,7 @@ func (q *Queries) Getalltags() ([]Tags, error) {
 	return items, rows.Err()
 }
 
-func (q *Queries) Addtagtopost(post_id int64, tag_id int64) (error) {
+func (q *Queries) Addtagtopost(post_id int64, tag_id int64) error {
 	const query = `INSERT INTO post_tags (post_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING;`
 	stmt := q.stmts["Addtagtopost_stmt"]
 	if stmt == nil {
@@ -2671,7 +2671,7 @@ func (q *Queries) Addtagtopost(post_id int64, tag_id int64) (error) {
 	return err
 }
 
-func (q *Queries) Removetagfrompost(post_id int64, tag_id int64) (error) {
+func (q *Queries) Removetagfrompost(post_id int64, tag_id int64) error {
 	const query = `DELETE FROM post_tags WHERE post_id = $1 AND tag_id = $2;`
 	stmt := q.stmts["Removetagfrompost_stmt"]
 	if stmt == nil {
@@ -2707,7 +2707,7 @@ func (q *Queries) Gettagsforpost(post_id int64) ([]Tags, error) {
 	}
 	defer rows.Close()
 
-	items := make([]Tags, 0, 8) 
+	items := make([]Tags, 0, 8)
 	for rows.Next() {
 		var item Tags
 		if err := rows.Scan(&item.Id, &item.Name, &item.Slug, &item.Color); err != nil {
@@ -2719,9 +2719,9 @@ func (q *Queries) Gettagsforpost(post_id int64) ([]Tags, error) {
 }
 
 type GetpostsbytagParams struct {
-	Slug string `json:"slug"`
-	Limit int64 `json:"limit"`
-	Offset int64 `json:"offset"`
+	Slug   string `json:"slug"`
+	Limit  int64  `json:"limit"`
+	Offset int64  `json:"offset"`
 }
 
 func (q *Queries) Getpostsbytag(arg GetpostsbytagParams) ([]GetpostsbytagRow, error) {
@@ -2743,7 +2743,7 @@ func (q *Queries) Getpostsbytag(arg GetpostsbytagParams) ([]GetpostsbytagRow, er
 	}
 	defer rows.Close()
 
-	items := make([]GetpostsbytagRow, 0, 8) 
+	items := make([]GetpostsbytagRow, 0, 8)
 	for rows.Next() {
 		var item GetpostsbytagRow
 		if err := rows.Scan(&item.Id, &item.Title, &item.Status, &item.CreatedAt, &item.AuthorName, &item.CommentCount); err != nil {
@@ -2755,12 +2755,12 @@ func (q *Queries) Getpostsbytag(arg GetpostsbytagParams) ([]GetpostsbytagRow, er
 }
 
 type GetpostsbytagRow struct {
-	Id int64 `json:"id"`
-	Title string `json:"title"`
-	Status PostStatus `json:"status"`
-	CreatedAt time.Time `json:"created_at"`
-	AuthorName string `json:"author_name"`
-	CommentCount int64 `json:"comment_count"`
+	Id           int64      `json:"id"`
+	Title        string     `json:"title"`
+	Status       PostStatus `json:"status"`
+	CreatedAt    time.Time  `json:"created_at"`
+	AuthorName   string     `json:"author_name"`
+	CommentCount int64      `json:"comment_count"`
 }
 
 func (q *Queries) Gettoptags(limit int64) ([]GettoptagsRow, error) {
@@ -2782,7 +2782,7 @@ func (q *Queries) Gettoptags(limit int64) ([]GettoptagsRow, error) {
 	}
 	defer rows.Close()
 
-	items := make([]GettoptagsRow, 0, 8) 
+	items := make([]GettoptagsRow, 0, 8)
 	for rows.Next() {
 		var item GettoptagsRow
 		if err := rows.Scan(&item.Id, &item.Name, &item.Slug, &item.Color, &item.PostCount); err != nil {
@@ -2794,23 +2794,23 @@ func (q *Queries) Gettoptags(limit int64) ([]GettoptagsRow, error) {
 }
 
 type GettoptagsRow struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
-	Slug string `json:"slug"`
-	Color string `json:"color"`
-	PostCount int64 `json:"post_count"`
+	Id        int64  `json:"id"`
+	Name      string `json:"name"`
+	Slug      string `json:"slug"`
+	Color     string `json:"color"`
+	PostCount int64  `json:"post_count"`
 }
 
 type UploadmediaParams struct {
-	UserId int64 `json:"user_id"`
-	PostId int64 `json:"post_id"`
-	Type string `json:"type_"`
-	Url string `json:"url"`
-	SizeBytes int64 `json:"size_bytes"`
-	MimeType string `json:"mime_type"`
-	Width int64 `json:"width"`
-	Height int64 `json:"height"`
-	Metadata []byte `json:"metadata"`
+	UserId    int64  `json:"user_id"`
+	PostId    int64  `json:"post_id"`
+	Type      string `json:"type_"`
+	Url       string `json:"url"`
+	SizeBytes int64  `json:"size_bytes"`
+	MimeType  string `json:"mime_type"`
+	Width     int64  `json:"width"`
+	Height    int64  `json:"height"`
+	Metadata  []byte `json:"metadata"`
 }
 
 func (q *Queries) Uploadmedia(arg UploadmediaParams) (Media, error) {
@@ -2852,7 +2852,7 @@ func (q *Queries) Getmediabypost(post_id int64) ([]GetmediabypostRow, error) {
 	}
 	defer rows.Close()
 
-	items := make([]GetmediabypostRow, 0, 8) 
+	items := make([]GetmediabypostRow, 0, 8)
 	for rows.Next() {
 		var item GetmediabypostRow
 		if err := rows.Scan(&item.Id, &item.Type, &item.Url, &item.SizeBytes, &item.MimeType, &item.Width, &item.Height, &item.CreatedAt); err != nil {
@@ -2864,19 +2864,19 @@ func (q *Queries) Getmediabypost(post_id int64) ([]GetmediabypostRow, error) {
 }
 
 type GetmediabypostRow struct {
-	Id uuid.UUID `json:"id"`
-	Type string `json:"type"`
-	Url string `json:"url"`
-	SizeBytes int64 `json:"size_bytes"`
-	MimeType string `json:"mime_type"`
-	Width int64 `json:"width"`
-	Height int64 `json:"height"`
+	Id        uuid.UUID `json:"id"`
+	Type      string    `json:"type"`
+	Url       string    `json:"url"`
+	SizeBytes int64     `json:"size_bytes"`
+	MimeType  string    `json:"mime_type"`
+	Width     int64     `json:"width"`
+	Height    int64     `json:"height"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
 type GetmediabyuserParams struct {
 	UserId int64 `json:"user_id"`
-	Limit int64 `json:"limit"`
+	Limit  int64 `json:"limit"`
 	Offset int64 `json:"offset"`
 }
 
@@ -2899,7 +2899,7 @@ func (q *Queries) Getmediabyuser(arg GetmediabyuserParams) ([]GetmediabyuserRow,
 	}
 	defer rows.Close()
 
-	items := make([]GetmediabyuserRow, 0, 8) 
+	items := make([]GetmediabyuserRow, 0, 8)
 	for rows.Next() {
 		var item GetmediabyuserRow
 		if err := rows.Scan(&item.Id, &item.Type, &item.Url, &item.SizeBytes, &item.MimeType, &item.CreatedAt); err != nil {
@@ -2911,11 +2911,11 @@ func (q *Queries) Getmediabyuser(arg GetmediabyuserParams) ([]GetmediabyuserRow,
 }
 
 type GetmediabyuserRow struct {
-	Id uuid.UUID `json:"id"`
-	Type string `json:"type"`
-	Url string `json:"url"`
-	SizeBytes int64 `json:"size_bytes"`
-	MimeType string `json:"mime_type"`
+	Id        uuid.UUID `json:"id"`
+	Type      string    `json:"type"`
+	Url       string    `json:"url"`
+	SizeBytes int64     `json:"size_bytes"`
+	MimeType  string    `json:"mime_type"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -2938,7 +2938,7 @@ func (q *Queries) Getmediabytype(user_id int64, type_ string) ([]GetmediabytypeR
 	}
 	defer rows.Close()
 
-	items := make([]GetmediabytypeRow, 0, 8) 
+	items := make([]GetmediabytypeRow, 0, 8)
 	for rows.Next() {
 		var item GetmediabytypeRow
 		if err := rows.Scan(&item.Id, &item.UserId, &item.Url, &item.SizeBytes, &item.MimeType, &item.CreatedAt); err != nil {
@@ -2950,15 +2950,15 @@ func (q *Queries) Getmediabytype(user_id int64, type_ string) ([]GetmediabytypeR
 }
 
 type GetmediabytypeRow struct {
-	Id uuid.UUID `json:"id"`
-	UserId int64 `json:"user_id"`
-	Url string `json:"url"`
-	SizeBytes int64 `json:"size_bytes"`
-	MimeType string `json:"mime_type"`
+	Id        uuid.UUID `json:"id"`
+	UserId    int64     `json:"user_id"`
+	Url       string    `json:"url"`
+	SizeBytes int64     `json:"size_bytes"`
+	MimeType  string    `json:"mime_type"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
-func (q *Queries) Deletemedia(id uuid.UUID, user_id int64) (error) {
+func (q *Queries) Deletemedia(id uuid.UUID, user_id int64) error {
 	const query = `DELETE FROM media WHERE id = $1 AND user_id = $2;`
 	stmt := q.stmts["Deletemedia_stmt"]
 	if stmt == nil {
@@ -3005,10 +3005,10 @@ func (q *Queries) Getstorageusedbyuser(user_id int64) (GetstorageusedbyuserRow, 
 }
 
 type GetstorageusedbyuserRow struct {
-	TotalBytes int64 `json:"total_bytes"`
-	TotalFiles int64 `json:"total_files"`
-	ImageCount int64 `json:"image_count"`
-	VideoCount int64 `json:"video_count"`
+	TotalBytes    int64 `json:"total_bytes"`
+	TotalFiles    int64 `json:"total_files"`
+	ImageCount    int64 `json:"image_count"`
+	VideoCount    int64 `json:"video_count"`
 	DocumentCount int64 `json:"document_count"`
 }
 
@@ -3031,7 +3031,7 @@ func (q *Queries) Getlargemediafiles(size_bytes int64, limit int64) ([]Getlargem
 	}
 	defer rows.Close()
 
-	items := make([]GetlargemediafilesRow, 0, 8) 
+	items := make([]GetlargemediafilesRow, 0, 8)
 	for rows.Next() {
 		var item GetlargemediafilesRow
 		if err := rows.Scan(&item.Id, &item.UserId, &item.Type, &item.Url, &item.SizeBytes, &item.MimeType, &item.CreatedAt); err != nil {
@@ -3043,18 +3043,18 @@ func (q *Queries) Getlargemediafiles(size_bytes int64, limit int64) ([]Getlargem
 }
 
 type GetlargemediafilesRow struct {
-	Id uuid.UUID `json:"id"`
-	UserId int64 `json:"user_id"`
-	Type string `json:"type"`
-	Url string `json:"url"`
-	SizeBytes int64 `json:"size_bytes"`
-	MimeType string `json:"mime_type"`
+	Id        uuid.UUID `json:"id"`
+	UserId    int64     `json:"user_id"`
+	Type      string    `json:"type"`
+	Url       string    `json:"url"`
+	SizeBytes int64     `json:"size_bytes"`
+	MimeType  string    `json:"mime_type"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
 type GetuserfeedParams struct {
 	UserId int64 `json:"user_id"`
-	Limit int64 `json:"limit"`
+	Limit  int64 `json:"limit"`
 	Offset int64 `json:"offset"`
 }
 
@@ -3077,7 +3077,7 @@ func (q *Queries) Getuserfeed(arg GetuserfeedParams) ([]GetuserfeedRow, error) {
 	}
 	defer rows.Close()
 
-	items := make([]GetuserfeedRow, 0, 8) 
+	items := make([]GetuserfeedRow, 0, 8)
 	for rows.Next() {
 		var item GetuserfeedRow
 		if err := rows.Scan(&item.Id, &item.Title, &item.Excerpt, &item.Status, &item.CreatedAt, &item.AuthorId, &item.AuthorName, &item.AvatarHash, &item.CommentCount, &item.TagCount); err != nil {
@@ -3089,16 +3089,16 @@ func (q *Queries) Getuserfeed(arg GetuserfeedParams) ([]GetuserfeedRow, error) {
 }
 
 type GetuserfeedRow struct {
-	Id int64 `json:"id"`
-	Title string `json:"title"`
-	Excerpt string `json:"excerpt"`
-	Status PostStatus `json:"status"`
-	CreatedAt time.Time `json:"created_at"`
-	AuthorId int64 `json:"author_id"`
-	AuthorName string `json:"author_name"`
-	AvatarHash uuid.UUID `json:"avatar_hash"`
-	CommentCount int64 `json:"comment_count"`
-	TagCount int64 `json:"tag_count"`
+	Id           int64      `json:"id"`
+	Title        string     `json:"title"`
+	Excerpt      string     `json:"excerpt"`
+	Status       PostStatus `json:"status"`
+	CreatedAt    time.Time  `json:"created_at"`
+	AuthorId     int64      `json:"author_id"`
+	AuthorName   string     `json:"author_name"`
+	AvatarHash   uuid.UUID  `json:"avatar_hash"`
+	CommentCount int64      `json:"comment_count"`
+	TagCount     int64      `json:"tag_count"`
 }
 
 func (q *Queries) Searchpostsfulltext(search_query string, limit int64) ([]SearchpostsfulltextRow, error) {
@@ -3120,7 +3120,7 @@ func (q *Queries) Searchpostsfulltext(search_query string, limit int64) ([]Searc
 	}
 	defer rows.Close()
 
-	items := make([]SearchpostsfulltextRow, 0, 8) 
+	items := make([]SearchpostsfulltextRow, 0, 8)
 	for rows.Next() {
 		var item SearchpostsfulltextRow
 		if err := rows.Scan(&item.Id, &item.Title, &item.Excerpt, &item.Status, &item.CreatedAt, &item.AuthorName, &item.Rank); err != nil {
@@ -3132,16 +3132,16 @@ func (q *Queries) Searchpostsfulltext(search_query string, limit int64) ([]Searc
 }
 
 type SearchpostsfulltextRow struct {
-	Id int64 `json:"id"`
-	Title string `json:"title"`
-	Excerpt string `json:"excerpt"`
-	Status PostStatus `json:"status"`
-	CreatedAt time.Time `json:"created_at"`
-	AuthorName string `json:"author_name"`
-	Rank float64 `json:"rank"`
+	Id         int64      `json:"id"`
+	Title      string     `json:"title"`
+	Excerpt    string     `json:"excerpt"`
+	Status     PostStatus `json:"status"`
+	CreatedAt  time.Time  `json:"created_at"`
+	AuthorName string     `json:"author_name"`
+	Rank       float64    `json:"rank"`
 }
 
-func (q *Queries) Bulkmarknotificationsread(user_id int64, id int64) (error) {
+func (q *Queries) Bulkmarknotificationsread(user_id int64, id int64) error {
 	const query = `UPDATE notifications SET is_read = TRUE WHERE user_id = $1 AND id = ANY($2::bigint[]);`
 	stmt := q.stmts["Bulkmarknotificationsread_stmt"]
 	if stmt == nil {
@@ -3188,25 +3188,25 @@ func (q *Queries) Getuserwithstats(id int64) (GetuserwithstatsRow, error) {
 }
 
 type GetuserwithstatsRow struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
-	Address string `json:"address"`
-	Isadmin bool `json:"isadmin"`
-	Age int64 `json:"age"`
-	AgeRange int64 `json:"age_range"`
-	Bio string `json:"bio"`
-	Email string `json:"email"`
-	Preferences []byte `json:"preferences"`
-	Tags []string `json:"tags"`
-	AvatarHash uuid.UUID `json:"avatar_hash"`
-	Shipping string `json:"shipping"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Role UserRole `json:"role"`
-	PublishedPosts int64 `json:"published_posts"`
-	TotalComments int64 `json:"total_comments"`
-	UnreadNotifications int64 `json:"unread_notifications"`
-	StorageUsed int64 `json:"storage_used"`
+	Id                  int64     `json:"id"`
+	Name                string    `json:"name"`
+	Address             string    `json:"address"`
+	Isadmin             bool      `json:"isadmin"`
+	Age                 int64     `json:"age"`
+	AgeRange            int64     `json:"age_range"`
+	Bio                 string    `json:"bio"`
+	Email               string    `json:"email"`
+	Preferences         []byte    `json:"preferences"`
+	Tags                []string  `json:"tags"`
+	AvatarHash          uuid.UUID `json:"avatar_hash"`
+	Shipping            string    `json:"shipping"`
+	CreatedAt           time.Time `json:"created_at"`
+	UpdatedAt           time.Time `json:"updated_at"`
+	Role                UserRole  `json:"role"`
+	PublishedPosts      int64     `json:"published_posts"`
+	TotalComments       int64     `json:"total_comments"`
+	UnreadNotifications int64     `json:"unread_notifications"`
+	StorageUsed         int64     `json:"storage_used"`
 }
 
 func (q *Queries) Getpostswithauthors(limit int64) ([]GetpostswithauthorsRow, error) {
@@ -3228,7 +3228,7 @@ func (q *Queries) Getpostswithauthors(limit int64) ([]GetpostswithauthorsRow, er
 	}
 	defer rows.Close()
 
-	items := make([]GetpostswithauthorsRow, 0, 8) 
+	items := make([]GetpostswithauthorsRow, 0, 8)
 	for rows.Next() {
 		var item GetpostswithauthorsRow
 		if err := rows.Scan(&item.Id, &item.UserId, &item.CategoryId, &item.Title, &item.Content, &item.Excerpt, &item.Tags, &item.Metadata, &item.ViewCount, &item.IsFeatured, &item.PublishedAt, &item.CreatedAt, &item.UpdatedAt, &item.Status, &item.AuthorName, &item.AuthorEmail); err != nil {
@@ -3240,21 +3240,20 @@ func (q *Queries) Getpostswithauthors(limit int64) ([]GetpostswithauthorsRow, er
 }
 
 type GetpostswithauthorsRow struct {
-	Id int64 `json:"id"`
-	UserId int64 `json:"user_id"`
-	CategoryId int64 `json:"category_id"`
-	Title string `json:"title"`
-	Content string `json:"content"`
-	Excerpt string `json:"excerpt"`
-	Tags []string `json:"tags"`
-	Metadata []byte `json:"metadata"`
-	ViewCount int64 `json:"view_count"`
-	IsFeatured bool `json:"is_featured"`
-	PublishedAt time.Time `json:"published_at"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Status PostStatus `json:"status"`
-	AuthorName string `json:"author_name"`
-	AuthorEmail string `json:"author_email"`
+	Id          int64      `json:"id"`
+	UserId      int64      `json:"user_id"`
+	CategoryId  int64      `json:"category_id"`
+	Title       string     `json:"title"`
+	Content     string     `json:"content"`
+	Excerpt     string     `json:"excerpt"`
+	Tags        []string   `json:"tags"`
+	Metadata    []byte     `json:"metadata"`
+	ViewCount   int64      `json:"view_count"`
+	IsFeatured  bool       `json:"is_featured"`
+	PublishedAt time.Time  `json:"published_at"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
+	Status      PostStatus `json:"status"`
+	AuthorName  string     `json:"author_name"`
+	AuthorEmail string     `json:"author_email"`
 }
-

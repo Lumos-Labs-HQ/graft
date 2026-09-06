@@ -326,10 +326,10 @@ func (s *Adapter) ExecuteQuery(ctx context.Context, query string) (*common.Query
 		return nil, fmt.Errorf("failed to get columns: %w", err)
 	}
 
-	var results []map[string]interface{}
+	var results []map[string]any
 	for rows.Next() {
-		values := make([]interface{}, len(columns))
-		valuePtrs := make([]interface{}, len(columns))
+		values := make([]any, len(columns))
+		valuePtrs := make([]any, len(columns))
 		for i := range columns {
 			valuePtrs[i] = &values[i]
 		}
@@ -338,7 +338,7 @@ func (s *Adapter) ExecuteQuery(ctx context.Context, query string) (*common.Query
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
 
-		row := make(map[string]interface{})
+		row := make(map[string]any)
 		for i, col := range columns {
 			val := values[i]
 			if b, ok := val.([]byte); ok {
@@ -360,7 +360,7 @@ func (s *Adapter) ExecuteQuery(ctx context.Context, query string) (*common.Query
 	}, nil
 }
 
-func (s *Adapter) ExecuteQueryWithArgs(ctx context.Context, query string, args ...interface{}) (*common.QueryResult, error) {
+func (s *Adapter) ExecuteQueryWithArgs(ctx context.Context, query string, args ...any) (*common.QueryResult, error) {
 	rows, err := s.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute query: %w", err)
@@ -372,10 +372,10 @@ func (s *Adapter) ExecuteQueryWithArgs(ctx context.Context, query string, args .
 		return nil, fmt.Errorf("failed to get columns: %w", err)
 	}
 
-	var results []map[string]interface{}
+	var results []map[string]any
 	for rows.Next() {
-		values := make([]interface{}, len(columns))
-		valuePtrs := make([]interface{}, len(columns))
+		values := make([]any, len(columns))
+		valuePtrs := make([]any, len(columns))
 		for i := range columns {
 			valuePtrs[i] = &values[i]
 		}
@@ -384,7 +384,7 @@ func (s *Adapter) ExecuteQueryWithArgs(ctx context.Context, query string, args .
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
 
-		row := make(map[string]interface{})
+		row := make(map[string]any)
 		for i, col := range columns {
 			val := values[i]
 			if b, ok := val.([]byte); ok {
@@ -406,7 +406,7 @@ func (s *Adapter) ExecuteQueryWithArgs(ctx context.Context, query string, args .
 	}, nil
 }
 
-func (s *Adapter) ExecuteDMLWithArgs(ctx context.Context, query string, args ...interface{}) error {
+func (s *Adapter) ExecuteDMLWithArgs(ctx context.Context, query string, args ...any) error {
 	_, err := s.db.ExecContext(ctx, query, args...)
 	return err
 }

@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -68,10 +69,8 @@ func (i *InputUtils) GetUserChoice(validOptions []string, prompt string, force b
 		input, _ := reader.ReadString('\n')
 		choice := strings.TrimSpace(strings.ToLower(input))
 
-		for _, option := range validOptions {
-			if choice == option {
-				return choice
-			}
+		if slices.Contains(validOptions, choice) {
+			return choice
 		}
 		fmt.Printf("Invalid option. Please choose from: %s\n", strings.Join(validOptions, ", "))
 	}
@@ -114,7 +113,7 @@ func (c *ConflictUtils) GetCachedContent(filePath string) ([]byte, bool) {
 	return content, ok
 }
 
-func (c *ConflictUtils) DetectMigrationConflicts(ctx context.Context, migration types.Migration, adapter interface{}) ([]types.MigrationConflict, error) {
+func (c *ConflictUtils) DetectMigrationConflicts(ctx context.Context, migration types.Migration, adapter any) ([]types.MigrationConflict, error) {
 	var conflicts []types.MigrationConflict
 
 	content, err := c.getMigrationContent(migration.FilePath)
@@ -159,7 +158,7 @@ func (c *ConflictUtils) DetectMigrationConflicts(ctx context.Context, migration 
 	return conflicts, nil
 }
 
-func (c *ConflictUtils) tableHasData(ctx context.Context, adapter interface{}, tableName string) bool {
+func (c *ConflictUtils) tableHasData(ctx context.Context, adapter any, tableName string) bool {
 	type tableChecker interface {
 		CheckTableExists(ctx context.Context, tableName string) (bool, error)
 		GetTableRowCount(ctx context.Context, tableName string) (int, error)

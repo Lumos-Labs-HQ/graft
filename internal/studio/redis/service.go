@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -18,11 +19,11 @@ type Service struct {
 }
 
 type KeyInfo struct {
-	Key   string      `json:"key"`
-	Type  string      `json:"type"`
-	TTL   int64       `json:"ttl"`
-	Value interface{} `json:"value,omitempty"`
-	Size  int64       `json:"size,omitempty"`
+	Key   string `json:"key"`
+	Type  string `json:"type"`
+	TTL   int64  `json:"ttl"`
+	Value any    `json:"value,omitempty"`
+	Size  int64  `json:"size,omitempty"`
 }
 
 type KeysResult struct {
@@ -45,10 +46,10 @@ type ServerInfo struct {
 }
 
 type CLIResult struct {
-	Command  string      `json:"command"`
-	Result   interface{} `json:"result"`
-	Duration string      `json:"duration"`
-	Error    string      `json:"error,omitempty"`
+	Command  string `json:"command"`
+	Result   any    `json:"result"`
+	Duration string `json:"duration"`
+	Error    string `json:"error,omitempty"`
 }
 
 func NewService(client *redis.Client) *Service {
@@ -66,30 +67,30 @@ func (s *Service) GetInfo() (*ServerInfo, error) {
 	}
 
 	serverInfo := &ServerInfo{}
-	lines := strings.Split(info, "\n")
-	for _, line := range lines {
-		if strings.HasPrefix(line, "redis_version:") {
-			serverInfo.Version = strings.TrimPrefix(line, "redis_version:")
+	lines := strings.SplitSeq(info, "\n")
+	for line := range lines {
+		if after, ok := strings.CutPrefix(line, "redis_version:"); ok {
+			serverInfo.Version = after
 			serverInfo.Version = strings.TrimSpace(serverInfo.Version)
-		} else if strings.HasPrefix(line, "redis_mode:") {
-			serverInfo.Mode = strings.TrimPrefix(line, "redis_mode:")
+		} else if after, ok := strings.CutPrefix(line, "redis_mode:"); ok {
+			serverInfo.Mode = after
 			serverInfo.Mode = strings.TrimSpace(serverInfo.Mode)
-		} else if strings.HasPrefix(line, "os:") {
-			serverInfo.OS = strings.TrimPrefix(line, "os:")
+		} else if after, ok := strings.CutPrefix(line, "os:"); ok {
+			serverInfo.OS = after
 			serverInfo.OS = strings.TrimSpace(serverInfo.OS)
-		} else if strings.HasPrefix(line, "uptime_in_seconds:") {
-			uptimeStr := strings.TrimPrefix(line, "uptime_in_seconds:")
+		} else if after, ok := strings.CutPrefix(line, "uptime_in_seconds:"); ok {
+			uptimeStr := after
 			uptimeStr = strings.TrimSpace(uptimeStr)
 			serverInfo.Uptime, _ = strconv.ParseInt(uptimeStr, 10, 64)
-		} else if strings.HasPrefix(line, "connected_clients:") {
-			clientsStr := strings.TrimPrefix(line, "connected_clients:")
+		} else if after, ok := strings.CutPrefix(line, "connected_clients:"); ok {
+			clientsStr := after
 			clientsStr = strings.TrimSpace(clientsStr)
 			serverInfo.ConnectedClients, _ = strconv.ParseInt(clientsStr, 10, 64)
-		} else if strings.HasPrefix(line, "used_memory_human:") {
-			serverInfo.UsedMemory = strings.TrimPrefix(line, "used_memory_human:")
+		} else if after, ok := strings.CutPrefix(line, "used_memory_human:"); ok {
+			serverInfo.UsedMemory = after
 			serverInfo.UsedMemory = strings.TrimSpace(serverInfo.UsedMemory)
-		} else if strings.HasPrefix(line, "used_memory_peak_human:") {
-			serverInfo.PeakMemory = strings.TrimPrefix(line, "used_memory_peak_human:")
+		} else if after, ok := strings.CutPrefix(line, "used_memory_peak_human:"); ok {
+			serverInfo.PeakMemory = after
 			serverInfo.PeakMemory = strings.TrimSpace(serverInfo.PeakMemory)
 		}
 	}
@@ -147,7 +148,7 @@ func (s *Service) GetKeys(pattern string, cursor uint64, count int64) (*KeysResu
 		return nil, err
 	}
 
-	sort.Strings(keys)
+	slices.Sort(keys)
 
 	// Batch TYPE and TTL using Pipeline to avoid N+1 round-trips
 	pipe := s.client.Pipeline()
@@ -252,9 +253,9 @@ func (s *Service) GetKey(key string) (*KeyInfo, error) {
 		if err != nil {
 			return nil, err
 		}
-		result := make([]map[string]interface{}, len(val))
+		result := make([]map[string]any, len(val))
 		for i, z := range val {
-			result[i] = map[string]interface{}{
+			result[i] = map[string]any{
 				"member": z.Member,
 				"score":  z.Score,
 			}
@@ -281,13 +282,13 @@ func (s *Service) GetKey(key string) (*KeyInfo, error) {
 	case "bitmap":
 		// Bitmap: return bitcount and bitfield info
 		bitcount, _ := s.client.BitCount(s.ctx, key, nil).Result()
-		keyInfo.Value = map[string]interface{}{"bitcount": bitcount}
+		keyInfo.Value = map[string]any{"bitcount": bitcount}
 		keyInfo.Size = bitcount
 
 	case "hyperloglog":
 		// HyperLogLog: return approximate count
 		count, _ := s.client.PFCount(s.ctx, key).Result()
-		keyInfo.Value = map[string]interface{}{"approx_count": count}
+		keyInfo.Value = map[string]any{"approx_count": count}
 		keyInfo.Size = count
 
 	case "geo", "geospatial":
@@ -314,7 +315,7 @@ func (s *Service) GetKey(key string) (*KeyInfo, error) {
 }
 
 // SetKey creates or updates a key
-func (s *Service) SetKey(key string, value interface{}, keyType string, ttl int64) error {
+func (s *Service) SetKey(key string, value any, keyType string, ttl int64) error {
 	switch keyType {
 	case "string":
 		strVal, ok := value.(string)
@@ -332,7 +333,7 @@ func (s *Service) SetKey(key string, value interface{}, keyType string, ttl int6
 		return s.client.Set(s.ctx, key, strVal, expiration).Err()
 
 	case "list":
-		vals, ok := value.([]interface{})
+		vals, ok := value.([]any)
 		if !ok {
 			return fmt.Errorf("invalid list value")
 		}
@@ -344,7 +345,7 @@ func (s *Service) SetKey(key string, value interface{}, keyType string, ttl int6
 		}
 
 	case "set":
-		vals, ok := value.([]interface{})
+		vals, ok := value.([]any)
 		if !ok {
 			return fmt.Errorf("invalid set value")
 		}
@@ -356,14 +357,14 @@ func (s *Service) SetKey(key string, value interface{}, keyType string, ttl int6
 		}
 
 	case "hash":
-		hashVal, ok := value.(map[string]interface{})
+		hashVal, ok := value.(map[string]any)
 		if !ok {
 			return fmt.Errorf("invalid hash value")
 		}
 		// Only delete and recreate if we have values to set
 		if len(hashVal) > 0 {
 			s.client.Del(s.ctx, key)
-			args := make([]interface{}, 0, len(hashVal)*2)
+			args := make([]any, 0, len(hashVal)*2)
 			for k, v := range hashVal {
 				args = append(args, k, v)
 			}
@@ -373,13 +374,13 @@ func (s *Service) SetKey(key string, value interface{}, keyType string, ttl int6
 		}
 
 	case "zset":
-		vals, ok := value.([]interface{})
+		vals, ok := value.([]any)
 		if !ok {
 			return fmt.Errorf("invalid zset value")
 		}
 		members := make([]redis.Z, 0, len(vals))
 		for _, v := range vals {
-			if m, ok := v.(map[string]interface{}); ok {
+			if m, ok := v.(map[string]any); ok {
 				score, _ := m["score"].(float64)
 				members = append(members, redis.Z{
 					Score:  score,
@@ -461,7 +462,7 @@ func (s *Service) ExecuteCLI(command string) *CLIResult {
 		return result
 	}
 
-	args := make([]interface{}, len(parts))
+	args := make([]any, len(parts))
 	for i, p := range parts {
 		args[i] = p
 	}
@@ -494,12 +495,12 @@ func (s *Service) SelectDatabase(db int) error {
 }
 
 // GetDatabases returns list of databases (0-15 for standard Redis)
-func (s *Service) GetDatabases() ([]map[string]interface{}, error) {
-	databases := make([]map[string]interface{}, 16)
+func (s *Service) GetDatabases() ([]map[string]any, error) {
+	databases := make([]map[string]any, 16)
 	currentDB := s.client.Options().DB
 
-	for i := 0; i < 16; i++ {
-		databases[i] = map[string]interface{}{
+	for i := range 16 {
+		databases[i] = map[string]any{
 			"index":   i,
 			"current": i == currentDB,
 		}
@@ -548,28 +549,28 @@ func parseCommand(cmd string) []string {
 	return parts
 }
 
-func formatResult(result interface{}) interface{} {
+func formatResult(result any) any {
 	if result == nil {
 		return nil
 	}
 
 	switch v := result.(type) {
-	case []interface{}:
-		formatted := make([]interface{}, len(v))
+	case []any:
+		formatted := make([]any, len(v))
 		for i, item := range v {
 			formatted[i] = formatResult(item)
 		}
 		return formatted
 	case []byte:
 		return string(v)
-	case map[interface{}]interface{}:
-		formatted := make(map[string]interface{})
+	case map[any]any:
+		formatted := make(map[string]any)
 		for key, val := range v {
 			formatted[fmt.Sprintf("%v", key)] = formatResult(val)
 		}
 		return formatted
-	case map[string]interface{}:
-		formatted := make(map[string]interface{})
+	case map[string]any:
+		formatted := make(map[string]any)
 		for key, val := range v {
 			formatted[key] = formatResult(val)
 		}
@@ -593,10 +594,10 @@ func formatResult(result interface{}) interface{} {
 
 // ExportedKey represents a key with its value and metadata
 type ExportedKey struct {
-	Key   string      `json:"key"`
-	Type  string      `json:"type"`
-	TTL   int64       `json:"ttl"`
-	Value interface{} `json:"value"`
+	Key   string `json:"key"`
+	Type  string `json:"type"`
+	TTL   int64  `json:"ttl"`
+	Value any    `json:"value"`
 }
 
 // ExportKeys exports all keys matching pattern to JSON format
@@ -764,15 +765,15 @@ func (s *Service) GetMemoryStats(pattern string, limit int) ([]MemoryInfo, map[s
 }
 
 // GetMemoryOverview returns overall memory statistics
-func (s *Service) GetMemoryOverview() (map[string]interface{}, error) {
+func (s *Service) GetMemoryOverview() (map[string]any, error) {
 	info, err := s.client.Info(s.ctx, "memory").Result()
 	if err != nil {
 		return nil, err
 	}
 
-	result := make(map[string]interface{})
-	lines := strings.Split(info, "\n")
-	for _, line := range lines {
+	result := make(map[string]any)
+	lines := strings.SplitSeq(info, "\n")
+	for line := range lines {
 		if strings.Contains(line, ":") {
 			parts := strings.SplitN(line, ":", 2)
 			if len(parts) == 2 {
@@ -817,10 +818,9 @@ func (s *Service) GetSlowLog(count int) ([]SlowLogEntry, error) {
 			FormattedTime: log.Time.Format("2006-01-02 15:04:05"),
 			ClientAddr:    log.ClientAddr,
 			ClientName:    log.ClientName,
-		}
 
-		// Convert args to strings
-		entry.Command = make([]string, len(log.Args))
+			// Convert args to strings
+			Command: make([]string, len(log.Args))}
 		copy(entry.Command, log.Args)
 
 		entries = append(entries, entry)
@@ -841,13 +841,13 @@ func (s *Service) GetSlowLogLen() (int64, error) {
 
 // ScriptResult represents the result of a Lua script execution
 type ScriptResult struct {
-	Result   interface{} `json:"result"`
-	Duration string      `json:"duration"`
-	Error    string      `json:"error,omitempty"`
+	Result   any    `json:"result"`
+	Duration string `json:"duration"`
+	Error    string `json:"error,omitempty"`
 }
 
 // ExecuteScript executes a Lua script
-func (s *Service) ExecuteScript(script string, keys []string, args []interface{}) *ScriptResult {
+func (s *Service) ExecuteScript(script string, keys []string, args []any) *ScriptResult {
 	start := time.Now()
 	result := &ScriptResult{}
 
@@ -868,7 +868,7 @@ func (s *Service) LoadScript(script string) (string, error) {
 }
 
 // ExecuteScriptBySHA executes a script by its SHA
-func (s *Service) ExecuteScriptBySHA(sha string, keys []string, args []interface{}) *ScriptResult {
+func (s *Service) ExecuteScriptBySHA(sha string, keys []string, args []any) *ScriptResult {
 	start := time.Now()
 	result := &ScriptResult{}
 
@@ -960,13 +960,13 @@ func (s *Service) ResetConfigStats() error {
 
 // ReplicationInfo represents replication status
 type ReplicationInfo struct {
-	Role             string                   `json:"role"`
-	ConnectedSlaves  int                      `json:"connected_slaves"`
-	MasterHost       string                   `json:"master_host,omitempty"`
-	MasterPort       int                      `json:"master_port,omitempty"`
-	MasterLinkStatus string                   `json:"master_link_status,omitempty"`
-	Slaves           []map[string]interface{} `json:"slaves,omitempty"`
-	RawInfo          map[string]string        `json:"raw_info"`
+	Role             string            `json:"role"`
+	ConnectedSlaves  int               `json:"connected_slaves"`
+	MasterHost       string            `json:"master_host,omitempty"`
+	MasterPort       int               `json:"master_port,omitempty"`
+	MasterLinkStatus string            `json:"master_link_status,omitempty"`
+	Slaves           []map[string]any  `json:"slaves,omitempty"`
+	RawInfo          map[string]string `json:"raw_info"`
 }
 
 // GetReplicationInfo returns replication status
@@ -978,11 +978,11 @@ func (s *Service) GetReplicationInfo() (*ReplicationInfo, error) {
 
 	result := &ReplicationInfo{
 		RawInfo: make(map[string]string),
-		Slaves:  make([]map[string]interface{}, 0),
+		Slaves:  make([]map[string]any, 0),
 	}
 
-	lines := strings.Split(info, "\n")
-	for _, line := range lines {
+	lines := strings.SplitSeq(info, "\n")
+	for line := range lines {
 		if strings.Contains(line, ":") {
 			parts := strings.SplitN(line, ":", 2)
 			if len(parts) == 2 {
@@ -1005,9 +1005,9 @@ func (s *Service) GetReplicationInfo() (*ReplicationInfo, error) {
 
 				// Parse slave info
 				if strings.HasPrefix(key, "slave") && strings.Contains(value, "ip=") {
-					slave := make(map[string]interface{})
+					slave := make(map[string]any)
 					slave["index"] = key
-					for _, pair := range strings.Split(value, ",") {
+					for pair := range strings.SplitSeq(value, ",") {
 						kv := strings.SplitN(pair, "=", 2)
 						if len(kv) == 2 {
 							slave[kv[0]] = kv[1]
@@ -1024,15 +1024,15 @@ func (s *Service) GetReplicationInfo() (*ReplicationInfo, error) {
 
 // ClusterInfo represents cluster information
 type ClusterInfo struct {
-	Enabled    bool                     `json:"enabled"`
-	State      string                   `json:"state,omitempty"`
-	SlotsOk    int                      `json:"slots_ok,omitempty"`
-	SlotsPfail int                      `json:"slots_pfail,omitempty"`
-	SlotsFail  int                      `json:"slots_fail,omitempty"`
-	KnownNodes int                      `json:"known_nodes,omitempty"`
-	Size       int                      `json:"size,omitempty"`
-	Nodes      []map[string]interface{} `json:"nodes,omitempty"`
-	RawInfo    map[string]string        `json:"raw_info,omitempty"`
+	Enabled    bool              `json:"enabled"`
+	State      string            `json:"state,omitempty"`
+	SlotsOk    int               `json:"slots_ok,omitempty"`
+	SlotsPfail int               `json:"slots_pfail,omitempty"`
+	SlotsFail  int               `json:"slots_fail,omitempty"`
+	KnownNodes int               `json:"known_nodes,omitempty"`
+	Size       int               `json:"size,omitempty"`
+	Nodes      []map[string]any  `json:"nodes,omitempty"`
+	RawInfo    map[string]string `json:"raw_info,omitempty"`
 }
 
 // GetClusterInfo returns cluster information
@@ -1051,8 +1051,8 @@ func (s *Service) GetClusterInfo() (*ClusterInfo, error) {
 
 	result.Enabled = true
 
-	lines := strings.Split(info, "\n")
-	for _, line := range lines {
+	lines := strings.SplitSeq(info, "\n")
+	for line := range lines {
 		if strings.Contains(line, ":") {
 			parts := strings.SplitN(line, ":", 2)
 			if len(parts) == 2 {
@@ -1087,11 +1087,11 @@ func (s *Service) GetClusterInfo() (*ClusterInfo, error) {
 	return result, nil
 }
 
-func parseClusterNodes(nodesStr string) []map[string]interface{} {
-	nodes := make([]map[string]interface{}, 0)
-	lines := strings.Split(nodesStr, "\n")
+func parseClusterNodes(nodesStr string) []map[string]any {
+	nodes := make([]map[string]any, 0)
+	lines := strings.SplitSeq(nodesStr, "\n")
 
-	for _, line := range lines {
+	for line := range lines {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
@@ -1099,7 +1099,7 @@ func parseClusterNodes(nodesStr string) []map[string]interface{} {
 
 		parts := strings.Fields(line)
 		if len(parts) >= 8 {
-			node := map[string]interface{}{
+			node := map[string]any{
 				"id":     parts[0],
 				"addr":   parts[1],
 				"flags":  parts[2],
@@ -1146,28 +1146,28 @@ func (s *Service) GetACLUser(username string) (*ACLUser, error) {
 	}
 
 	// Parse ACL result - it comes as a slice of alternating keys and values
-	if slice, ok := result.([]interface{}); ok {
+	if slice, ok := result.([]any); ok {
 		for i := 0; i < len(slice)-1; i += 2 {
 			key := fmt.Sprintf("%v", slice[i])
 			value := slice[i+1]
 
 			switch key {
 			case "flags":
-				if flags, ok := value.([]interface{}); ok {
+				if flags, ok := value.([]any); ok {
 					user.Flags = make([]string, len(flags))
 					for j, f := range flags {
 						user.Flags[j] = fmt.Sprintf("%v", f)
 					}
 				}
 			case "keys":
-				if keys, ok := value.([]interface{}); ok {
+				if keys, ok := value.([]any); ok {
 					user.Keys = make([]string, len(keys))
 					for j, k := range keys {
 						user.Keys[j] = fmt.Sprintf("%v", k)
 					}
 				}
 			case "channels":
-				if channels, ok := value.([]interface{}); ok {
+				if channels, ok := value.([]any); ok {
 					user.Channels = make([]string, len(channels))
 					for j, c := range channels {
 						user.Channels[j] = fmt.Sprintf("%v", c)
@@ -1184,7 +1184,7 @@ func (s *Service) GetACLUser(username string) (*ACLUser, error) {
 
 // CreateACLUser creates a new ACL user
 func (s *Service) CreateACLUser(username string, rules []string) error {
-	args := make([]interface{}, 0, len(rules)+2)
+	args := make([]any, 0, len(rules)+2)
 	args = append(args, "ACL", "SETUSER", username)
 	for _, rule := range rules {
 		args = append(args, rule)
@@ -1199,7 +1199,7 @@ func (s *Service) DeleteACLUser(username string) error {
 }
 
 // GetACLLog returns ACL security log
-func (s *Service) GetACLLog(count int) ([]map[string]interface{}, error) {
+func (s *Service) GetACLLog(count int) ([]map[string]any, error) {
 	if count <= 0 {
 		count = 10
 	}
@@ -1209,9 +1209,9 @@ func (s *Service) GetACLLog(count int) ([]map[string]interface{}, error) {
 		return nil, err
 	}
 
-	logs := make([]map[string]interface{}, 0, len(result))
+	logs := make([]map[string]any, 0, len(result))
 	for _, entry := range result {
-		log := map[string]interface{}{
+		log := map[string]any{
 			"count":                  entry.Count,
 			"reason":                 entry.Reason,
 			"context":                entry.Context,
@@ -1235,7 +1235,7 @@ func (s *Service) ResetACLLog() error {
 }
 
 // Publish publishes a message to a channel
-func (s *Service) Publish(channel string, message interface{}) (int64, error) {
+func (s *Service) Publish(channel string, message any) (int64, error) {
 	return s.client.Publish(s.ctx, channel, message).Result()
 }
 

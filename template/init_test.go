@@ -47,7 +47,7 @@ func TestGetFlashORMConfig_ValidTOML(t *testing.T) {
 	for _, db := range []DatabaseType{PostgreSQL, MySQL, SQLite} {
 		pt := NewProjectTemplate(db, false, false)
 		cfg := pt.GetFlashORMConfig()
-		var parsed map[string]interface{}
+		var parsed map[string]any
 		if err := toml.Unmarshal([]byte(cfg), &parsed); err != nil {
 			t.Errorf("GetFlashORMConfig(%s) invalid TOML: %v\n%s", db, err, cfg)
 		}

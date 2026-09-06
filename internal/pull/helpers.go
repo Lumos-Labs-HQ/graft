@@ -57,7 +57,8 @@ func (s *Service) extractTableSQL(content, tableName string) string {
 		endPos = endPos + semiPos + 1
 	}
 
-	tableSQL := content[start:endPos]
+	var tableSQL strings.Builder
+	tableSQL.WriteString(content[start:endPos])
 
 	// Also capture any CREATE INDEX statements that follow
 	remaining := content[endPos:]
@@ -66,11 +67,11 @@ func (s *Service) extractTableSQL(content, tableName string) string {
 		if match == nil {
 			break
 		}
-		tableSQL += "\n" + strings.TrimSpace(match[1])
+		tableSQL.WriteString("\n" + strings.TrimSpace(match[1]))
 		remaining = remaining[len(match[0]):]
 	}
 
-	return strings.TrimSpace(tableSQL)
+	return strings.TrimSpace(tableSQL.String())
 }
 
 // replaceTableInContent replaces only the CREATE TABLE...); block in content,
@@ -131,8 +132,8 @@ func (s *Service) compareTableSQL(sql1, sql2 string) bool {
 
 // isFileCommentedOut checks if a file is already fully commented out
 func (s *Service) isFileCommentedOut(content string) bool {
-	lines := strings.Split(content, "\n")
-	for _, line := range lines {
+	lines := strings.SplitSeq(content, "\n")
+	for line := range lines {
 		trimmed := strings.TrimSpace(line)
 		if trimmed == "" {
 			continue
@@ -153,8 +154,8 @@ func (s *Service) commentOutFile(content, tableName string) string {
 	sb.WriteString("-- You can delete this file or uncomment to recreate the table\n")
 	sb.WriteString("-- ============================================================\n\n")
 
-	lines := strings.Split(content, "\n")
-	for _, line := range lines {
+	lines := strings.SplitSeq(content, "\n")
+	for line := range lines {
 		trimmed := strings.TrimSpace(line)
 		if trimmed == "" {
 			sb.WriteString("\n")

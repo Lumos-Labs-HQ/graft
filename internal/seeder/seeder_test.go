@@ -68,7 +68,7 @@ func TestDataGenerator_Generate_UUID(t *testing.T) {
 func TestDataGenerator_Generate_Nullable_CanBeNil(t *testing.T) {
 	g := newGen(t)
 	gotNil := false
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		if g.Generate("TEXT", true) == nil {
 			gotNil = true
 			break
@@ -177,7 +177,7 @@ func TestDataGenerator_GenerateForColumn_Phone(t *testing.T) {
 
 func TestDataGenerator_GenerateForColumn_Document_IsNil(t *testing.T) {
 	g := newGen(t)
-	for i := 0; i < 20; i++ {
+	for range 20 {
 		if v := g.GenerateForColumn("document", "TEXT", false, nil); v != nil {
 			t.Errorf("document column = %v, want nil", v)
 			break

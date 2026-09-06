@@ -10,20 +10,20 @@ import (
 // Preferences represents the JSON structure for the 'preferences' column.
 // Unmarshal with: json.Unmarshal([]byte(row.Preferences), &obj)
 type Preferences struct {
-	Notifications *bool `json:"notifications"`
-	Language *string `json:"language"`
-	FontSize *int64 `json:"font_size"`
-	Theme *string `json:"theme"`
+	Notifications *bool   `json:"notifications"`
+	Language      *string `json:"language"`
+	FontSize      *int64  `json:"font_size"`
+	Theme         *string `json:"theme"`
 }
 
 // Metadata represents the JSON structure for the 'metadata' column.
 // Unmarshal with: json.Unmarshal([]byte(row.Metadata), &obj)
 type Metadata struct {
-	Views *int64 `json:"views"`
-	Shares *int64 `json:"shares"`
-	Bookmarks *int64 `json:"bookmarks"`
+	Views       *int64   `json:"views"`
+	Shares      *int64   `json:"shares"`
+	Bookmarks   *int64   `json:"bookmarks"`
 	AvgReadTime *float64 `json:"avg_read_time"`
-	TagsUsed []string `json:"tags_used"`
+	TagsUsed    []string `json:"tags_used"`
 }
 
 func (q *Queries) Getuserprefs(id int64) (GetuserprefsRow, error) {
@@ -56,9 +56,9 @@ func (q *Queries) Getuserprefs(id int64) (GetuserprefsRow, error) {
 }
 
 type GetuserprefsRow struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
-	Email string `json:"email"`
+	Id          int64        `json:"id"`
+	Name        string       `json:"name"`
+	Email       string       `json:"email"`
 	Preferences *Preferences `json:"preferences"`
 }
 
@@ -92,10 +92,10 @@ func (q *Queries) Setuserprefs(preferences []byte, id int64) (SetuserprefsRow, e
 }
 
 type SetuserprefsRow struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
+	Id          int64        `json:"id"`
+	Name        string       `json:"name"`
 	Preferences *Preferences `json:"preferences"`
-	UpdatedAt time.Time `json:"updated_at"`
+	UpdatedAt   time.Time    `json:"updated_at"`
 }
 
 func (q *Queries) Getpostmeta(id int64) (GetpostmetaRow, error) {
@@ -128,12 +128,12 @@ func (q *Queries) Getpostmeta(id int64) (GetpostmetaRow, error) {
 }
 
 type GetpostmetaRow struct {
-	Id int64 `json:"id"`
-	Title string `json:"title"`
-	Status PostStatus `json:"status"`
-	Metadata *Metadata `json:"metadata"`
-	UserId int64 `json:"user_id"`
-	CreatedAt time.Time `json:"created_at"`
+	Id        int64      `json:"id"`
+	Title     string     `json:"title"`
+	Status    PostStatus `json:"status"`
+	Metadata  *Metadata  `json:"metadata"`
+	UserId    int64      `json:"user_id"`
+	CreatedAt time.Time  `json:"created_at"`
 }
 
 func (q *Queries) Listuserswithprefs(limit int64) ([]ListuserswithprefsRow, error) {
@@ -155,7 +155,7 @@ func (q *Queries) Listuserswithprefs(limit int64) ([]ListuserswithprefsRow, erro
 	}
 	defer rows.Close()
 
-	items := make([]ListuserswithprefsRow, 0, 8) 
+	items := make([]ListuserswithprefsRow, 0, 8)
 	for rows.Next() {
 		var item ListuserswithprefsRow
 		if err := rows.Scan(&item.Id, &item.Name, &item.Email, &item.Preferences, &item.CreatedAt); err != nil {
@@ -167,11 +167,11 @@ func (q *Queries) Listuserswithprefs(limit int64) ([]ListuserswithprefsRow, erro
 }
 
 type ListuserswithprefsRow struct {
-	Id int64 `json:"id"`
-	Name string `json:"name"`
-	Email string `json:"email"`
+	Id          int64        `json:"id"`
+	Name        string       `json:"name"`
+	Email       string       `json:"email"`
 	Preferences *Preferences `json:"preferences"`
-	CreatedAt time.Time `json:"created_at"`
+	CreatedAt   time.Time    `json:"created_at"`
 }
 
 func (q *Queries) Listpostswithmeta(user_id int64) ([]ListpostswithmetaRow, error) {
@@ -193,7 +193,7 @@ func (q *Queries) Listpostswithmeta(user_id int64) ([]ListpostswithmetaRow, erro
 	}
 	defer rows.Close()
 
-	items := make([]ListpostswithmetaRow, 0, 8) 
+	items := make([]ListpostswithmetaRow, 0, 8)
 	for rows.Next() {
 		var item ListpostswithmetaRow
 		if err := rows.Scan(&item.Id, &item.Title, &item.Status, &item.ViewCount, &item.Metadata, &item.CreatedAt); err != nil {
@@ -205,11 +205,10 @@ func (q *Queries) Listpostswithmeta(user_id int64) ([]ListpostswithmetaRow, erro
 }
 
 type ListpostswithmetaRow struct {
-	Id int64 `json:"id"`
-	Title string `json:"title"`
-	Status PostStatus `json:"status"`
-	ViewCount int64 `json:"view_count"`
-	Metadata *Metadata `json:"metadata"`
-	CreatedAt time.Time `json:"created_at"`
+	Id        int64      `json:"id"`
+	Title     string     `json:"title"`
+	Status    PostStatus `json:"status"`
+	ViewCount int64      `json:"view_count"`
+	Metadata  *Metadata  `json:"metadata"`
+	CreatedAt time.Time  `json:"created_at"`
 }
-

@@ -48,10 +48,10 @@ func (s *Server) handleGetKey(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleSetKey(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		Key   string      `json:"key"`
-		Value interface{} `json:"value"`
-		Type  string      `json:"type"`
-		TTL   int64       `json:"ttl"`
+		Key   string `json:"key"`
+		Value any    `json:"value"`
+		Type  string `json:"type"`
+		TTL   int64  `json:"ttl"`
 	}
 
 	if err := common.ParseJSON(r, &body); err != nil {
@@ -79,9 +79,9 @@ func (s *Server) handleUpdateKey(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var body struct {
-		Value interface{} `json:"value"`
-		Type  string      `json:"type"`
-		TTL   int64       `json:"ttl"`
+		Value any    `json:"value"`
+		Type  string `json:"type"`
+		TTL   int64  `json:"ttl"`
 	}
 
 	if err := common.ParseJSON(r, &body); err != nil {
@@ -276,9 +276,9 @@ func (s *Server) handleGetSlowLogLen(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleExecuteScript(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		Script string        `json:"script"`
-		Keys   []string      `json:"keys"`
-		Args   []interface{} `json:"args"`
+		Script string   `json:"script"`
+		Keys   []string `json:"keys"`
+		Args   []any    `json:"args"`
 	}
 
 	if err := common.ParseJSON(r, &body); err != nil {
@@ -295,7 +295,7 @@ func (s *Server) handleExecuteScript(w http.ResponseWriter, r *http.Request) {
 		body.Keys = []string{}
 	}
 	if body.Args == nil {
-		body.Args = []interface{}{}
+		body.Args = []any{}
 	}
 
 	result := s.service.ExecuteScript(body.Script, body.Keys, body.Args)
@@ -323,9 +323,9 @@ func (s *Server) handleLoadScript(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleExecuteScriptBySHA(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		SHA  string        `json:"sha"`
-		Keys []string      `json:"keys"`
-		Args []interface{} `json:"args"`
+		SHA  string   `json:"sha"`
+		Keys []string `json:"keys"`
+		Args []any    `json:"args"`
 	}
 
 	if err := common.ParseJSON(r, &body); err != nil {
@@ -342,7 +342,7 @@ func (s *Server) handleExecuteScriptBySHA(w http.ResponseWriter, r *http.Request
 		body.Keys = []string{}
 	}
 	if body.Args == nil {
-		body.Args = []interface{}{}
+		body.Args = []any{}
 	}
 
 	result := s.service.ExecuteScriptBySHA(body.SHA, body.Keys, body.Args)
@@ -565,8 +565,8 @@ func (s *Server) handleGetExtendedInfo(w http.ResponseWriter, r *http.Request) {
 	result := make(map[string]map[string]string)
 	currentSection := "default"
 
-	lines := strings.Split(info, "\n")
-	for _, line := range lines {
+	lines := strings.SplitSeq(info, "\n")
+	for line := range lines {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue

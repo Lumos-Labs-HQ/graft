@@ -117,7 +117,7 @@ func (a *Adapter) CheckUniqueConstraint(_ context.Context, _, _ string) (bool, e
 	return false, nil
 }
 
-func (a *Adapter) GetTableData(ctx context.Context, tableName string) ([]map[string]interface{}, error) {
+func (a *Adapter) GetTableData(ctx context.Context, tableName string) ([]map[string]any, error) {
 	rows, err := a.db.QueryContext(ctx, fmt.Sprintf("SELECT * FROM `%s`", tableName))
 	if err != nil {
 		return nil, err
@@ -125,17 +125,17 @@ func (a *Adapter) GetTableData(ctx context.Context, tableName string) ([]map[str
 	defer rows.Close()
 
 	cols, _ := rows.Columns()
-	var result []map[string]interface{}
+	var result []map[string]any
 	for rows.Next() {
-		vals := make([]interface{}, len(cols))
-		ptrs := make([]interface{}, len(cols))
+		vals := make([]any, len(cols))
+		ptrs := make([]any, len(cols))
 		for i := range vals {
 			ptrs[i] = &vals[i]
 		}
 		if err := rows.Scan(ptrs...); err != nil {
 			continue
 		}
-		row := make(map[string]interface{}, len(cols))
+		row := make(map[string]any, len(cols))
 		for i, c := range cols {
 			row[c] = vals[i]
 		}

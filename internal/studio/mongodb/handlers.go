@@ -103,8 +103,8 @@ func (s *Server) handleCreateCollection(w http.ResponseWriter, r *http.Request) 
 	}
 
 	var req struct {
-		Name    string                 `json:"name"`
-		Options map[string]interface{} `json:"options"`
+		Name    string         `json:"name"`
+		Options map[string]any `json:"options"`
 	}
 	if err := common.ParseJSON(r, &req); err != nil {
 		common.JSONError(w, http.StatusBadRequest, "Invalid request")
@@ -173,7 +173,7 @@ func (s *Server) handleInsertDocument(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var document map[string]interface{}
+	var document map[string]any
 	if err := common.ParseJSON(r, &document); err != nil {
 		common.JSONError(w, http.StatusBadRequest, "Invalid request")
 		return
@@ -200,7 +200,7 @@ func (s *Server) handleUpdateDocument(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var document map[string]interface{}
+	var document map[string]any
 	if err := common.ParseJSON(r, &document); err != nil {
 		common.JSONError(w, http.StatusBadRequest, "Invalid request")
 		return
@@ -258,7 +258,7 @@ func (s *Server) handleAggregate(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var rawPipeline []interface{}
+	var rawPipeline []any
 	if err := common.ParseJSON(r, &rawPipeline); err != nil {
 		common.JSONError(w, http.StatusBadRequest, "Invalid request")
 		return
@@ -266,7 +266,7 @@ func (s *Server) handleAggregate(w http.ResponseWriter, r *http.Request) {
 
 	pipeline := make([]bson.M, len(rawPipeline))
 	for i, stage := range rawPipeline {
-		if stageMap, ok := stage.(map[string]interface{}); ok {
+		if stageMap, ok := stage.(map[string]any); ok {
 			pipeline[i] = bson.M(stageMap)
 		}
 	}
@@ -303,8 +303,8 @@ func (s *Server) handleCreateIndex(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		Keys   map[string]interface{} `json:"keys"`
-		Unique bool                   `json:"unique"`
+		Keys   map[string]any `json:"keys"`
+		Unique bool           `json:"unique"`
 	}
 	if err := common.ParseJSON(r, &req); err != nil {
 		common.JSONError(w, http.StatusBadRequest, "Invalid request")

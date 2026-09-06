@@ -6,7 +6,7 @@ import (
 
 type QueryResult struct {
 	Columns []string
-	Rows    []map[string]interface{}
+	Rows    []map[string]any
 }
 
 // ParseSQLStatements splits SQL migration text into individual statements,

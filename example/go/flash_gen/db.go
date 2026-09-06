@@ -34,4 +34,3 @@ func (q *Queries) Close() error {
 	q.stmts = make(map[string]*sql.Stmt)
 	return nil
 }
-

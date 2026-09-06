@@ -16,43 +16,43 @@ type MongoDBAdapter interface {
 	Ping(ctx context.Context) error
 
 	// Database operations
-	ListDatabases(ctx context.Context) ([]map[string]interface{}, error)
+	ListDatabases(ctx context.Context) ([]map[string]any, error)
 	SwitchDatabase(dbName string) error
 	DropDatabase(ctx context.Context, dbName string) error
 	CreateDatabase(ctx context.Context, dbName string) error
-	GetDatabaseStats(ctx context.Context) (map[string]interface{}, error)
+	GetDatabaseStats(ctx context.Context) (map[string]any, error)
 
 	// Collection operations
 	ListCollections(ctx context.Context) ([]string, error)
 	ListCollectionsInDB(ctx context.Context, database string) ([]string, error)
-	GetCollectionStats(ctx context.Context, collection string) (map[string]interface{}, error)
-	CreateCollection(ctx context.Context, name string, options interface{}) error
+	GetCollectionStats(ctx context.Context, collection string) (map[string]any, error)
+	CreateCollection(ctx context.Context, name string, options any) error
 	DropCollection(ctx context.Context, name string) error
 
 	// Document operations
-	FindDocuments(ctx context.Context, collection string, filter bson.M, skip, limit int64) ([]map[string]interface{}, error)
-	FindDocumentsInDB(ctx context.Context, database, collection string, filter bson.M, skip, limit int64) ([]map[string]interface{}, error)
+	FindDocuments(ctx context.Context, collection string, filter bson.M, skip, limit int64) ([]map[string]any, error)
+	FindDocumentsInDB(ctx context.Context, database, collection string, filter bson.M, skip, limit int64) ([]map[string]any, error)
 	CountDocuments(ctx context.Context, collection string, filter bson.M) (int64, error)
 	CountDocumentsInDB(ctx context.Context, database, collection string, filter bson.M) (int64, error)
-	InsertDocument(ctx context.Context, collection string, document interface{}) (string, error)
-	UpdateDocument(ctx context.Context, collection string, id string, update interface{}) error
+	InsertDocument(ctx context.Context, collection string, document any) (string, error)
+	UpdateDocument(ctx context.Context, collection string, id string, update any) error
 	DeleteDocument(ctx context.Context, collection string, id string) error
 
 	// Index operations
-	ListIndexes(ctx context.Context, collection string) ([]map[string]interface{}, error)
-	CreateIndex(ctx context.Context, collection string, keys map[string]interface{}, unique bool) error
+	ListIndexes(ctx context.Context, collection string) ([]map[string]any, error)
+	CreateIndex(ctx context.Context, collection string, keys map[string]any, unique bool) error
 	DropIndex(ctx context.Context, collection string, indexName string) error
 
 	// Aggregation
-	Aggregate(ctx context.Context, collection string, pipeline interface{}) ([]map[string]interface{}, error)
+	Aggregate(ctx context.Context, collection string, pipeline any) ([]map[string]any, error)
 
 	// Query execution
-	ExecuteMongoQuery(ctx context.Context, query string) ([]map[string]interface{}, error)
+	ExecuteMongoQuery(ctx context.Context, query string) ([]map[string]any, error)
 
 	// Schema inference (for compatibility with generic adapter)
 	GetAllTableNames(ctx context.Context) ([]string, error)
 	GetTableColumns(ctx context.Context, tableName string) ([]types.SchemaColumn, error)
-	GetTableData(ctx context.Context, tableName string) ([]map[string]interface{}, error)
+	GetTableData(ctx context.Context, tableName string) ([]map[string]any, error)
 	GetTableRowCount(ctx context.Context, tableName string) (int, error)
 	GetAllTableRowCounts(ctx context.Context, tableNames []string) (map[string]int, error)
 }

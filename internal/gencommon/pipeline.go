@@ -18,21 +18,21 @@ type FileResult struct {
 
 // FileGeneratorFunc generates code for a single query source file.
 // Returns the generated code content and the output filename.
-type FileGeneratorFunc func(sourceFile string, queries []interface{}, fullRegen bool) (code string, outputFile string, err error)
+type FileGeneratorFunc func(sourceFile string, queries []any, fullRegen bool) (code string, outputFile string, err error)
 
 // IncrementalPipeline runs parallel code generation with incremental caching.
 type IncrementalPipeline struct {
-	QueriesDir   string                         // directory containing .sql query files
-	OutDir       string                         // output directory
-	Extension    string                         // file extension for output (".go", ".java", ".kt", ".js", ".py")
-	SourceMapper func(query interface{}) string // extracts source file name from a query
+	QueriesDir   string                 // directory containing .sql query files
+	OutDir       string                 // output directory
+	Extension    string                 // file extension for output (".go", ".java", ".kt", ".js", ".py")
+	SourceMapper func(query any) string // extracts source file name from a query
 
 	Cache *GenerationCache
 }
 
 // GroupQueries groups queries by their source file name.
-func (p *IncrementalPipeline) GroupQueries(queries []interface{}) map[string][]interface{} {
-	groups := make(map[string][]interface{})
+func (p *IncrementalPipeline) GroupQueries(queries []any) map[string][]any {
+	groups := make(map[string][]any)
 	for _, q := range queries {
 		src := p.SourceMapper(q)
 		if src == "" {
@@ -46,12 +46,12 @@ func (p *IncrementalPipeline) GroupQueries(queries []interface{}) map[string][]i
 // Run executes parallel code generation for all query groups.
 // genFunc implements the actual code generation per file.
 // It's called for each unique source file.
-func (p *IncrementalPipeline) Run(queries []interface{}, fullRegen bool, genFunc func(sourceFile string, fileQueries []interface{}, fullRegen bool) (string, error)) error {
+func (p *IncrementalPipeline) Run(queries []any, fullRegen bool, genFunc func(sourceFile string, fileQueries []any, fullRegen bool) (string, error)) error {
 	groups := p.GroupQueries(queries)
 
 	type fileGroup struct {
 		sourceFile string
-		queries    []interface{}
+		queries    []any
 	}
 	fileGroups := make([]fileGroup, 0, len(groups))
 	for src, qs := range groups {
@@ -61,23 +61,18 @@ func (p *IncrementalPipeline) Run(queries []interface{}, fullRegen bool, genFunc
 	usedNames := make(map[string]int)
 	var mu sync.Mutex
 
-	numWorkers := runtime.NumCPU()
-	if numWorkers > len(fileGroups) {
-		numWorkers = len(fileGroups)
-	}
+	numWorkers := min(runtime.NumCPU(), len(fileGroups))
 
 	workCh := make(chan fileGroup, len(fileGroups))
 	errCh := make(chan error, len(fileGroups))
 	var wg sync.WaitGroup
 
 	for i := 0; i < numWorkers; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			for fg := range workCh {
 				errCh <- p.processFile(fg.sourceFile, fg.queries, fullRegen, genFunc, &mu, usedNames)
 			}
-		}()
+		})
 	}
 	for _, fg := range fileGroups {
 		workCh <- fg
@@ -92,7 +87,7 @@ func (p *IncrementalPipeline) Run(queries []interface{}, fullRegen bool, genFunc
 	return nil
 }
 
-func (p *IncrementalPipeline) processFile(sourceFile string, fileQueries []interface{}, fullRegen bool, genFunc func(string, []interface{}, bool) (string, error), mu *sync.Mutex, usedNames map[string]int) error {
+func (p *IncrementalPipeline) processFile(sourceFile string, fileQueries []any, fullRegen bool, genFunc func(string, []any, bool) (string, error), mu *sync.Mutex, usedNames map[string]int) error {
 	queryFile := filepath.Join(p.QueriesDir, sourceFile+".sql")
 	currentHash, _ := ComputeFileChecksum(queryFile)
 
@@ -146,10 +141,10 @@ func extractTableFromSQL(sql string) string {
 	// Simple extraction: look for FROM/JOIN/INTO/UPDATE keywords
 	upper := strings.ToUpper(strings.TrimSpace(sql))
 	for _, prefix := range []string{"INSERT INTO ", "UPDATE ", "FROM "} {
-		if idx := strings.Index(upper, prefix); idx >= 0 {
-			rest := strings.TrimSpace(upper[idx+len(prefix):])
-			if space := strings.Index(rest, " "); space >= 0 {
-				return strings.Trim(rest[:space], `"'`)
+		if _, after, ok := strings.Cut(upper, prefix); ok {
+			rest := strings.TrimSpace(after)
+			if before, _, ok := strings.Cut(rest, " "); ok {
+				return strings.Trim(before, `"'`)
 			}
 			return strings.Trim(rest, `"'`)
 		}

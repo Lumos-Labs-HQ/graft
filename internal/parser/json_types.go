@@ -102,7 +102,7 @@ func parseJsonInline(content string) (*JsonType, error) {
 
 // parseJsonFieldsFromBytes parses a JSON object where values are type strings.
 func parseJsonFieldsFromBytes(data []byte) ([]*JsonField, error) {
-	var raw map[string]interface{}
+	var raw map[string]any
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return nil, fmt.Errorf("invalid JSON: %w", err)
 	}
@@ -110,7 +110,7 @@ func parseJsonFieldsFromBytes(data []byte) ([]*JsonField, error) {
 	return parseJsonFieldMap(raw)
 }
 
-func parseJsonFieldMap(raw map[string]interface{}) ([]*JsonField, error) {
+func parseJsonFieldMap(raw map[string]any) ([]*JsonField, error) {
 	fields := make([]*JsonField, 0, len(raw))
 
 	for key, val := range raw {
@@ -122,7 +122,7 @@ func parseJsonFieldMap(raw map[string]interface{}) ([]*JsonField, error) {
 		switch v := val.(type) {
 		case string:
 			field.Type = normalizeJsonType(v)
-		case map[string]interface{}:
+		case map[string]any:
 			// Nested object — type becomes the PascalCase of the field name
 			field.Type = utils.ToPascalCase(key)
 		default:
@@ -171,14 +171,14 @@ func normalizeJsonType(t string) string {
 // GetNestedJsonTypes extracts any nested object definitions from a JsonType's fields.
 // Returns additional JsonType definitions that need to be generated.
 func GetNestedJsonTypes(jt *JsonType, rawData []byte) []*JsonType {
-	var raw map[string]interface{}
+	var raw map[string]any
 	if err := json.Unmarshal(rawData, &raw); err != nil {
 		return nil
 	}
 
 	var nested []*JsonType
 	for key, val := range raw {
-		if obj, ok := val.(map[string]interface{}); ok {
+		if obj, ok := val.(map[string]any); ok {
 			nestedFields, _ := parseJsonFieldMap(obj)
 			nested = append(nested, &JsonType{
 				Column: key,

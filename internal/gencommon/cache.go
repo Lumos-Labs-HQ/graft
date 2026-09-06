@@ -7,7 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -158,11 +158,8 @@ func (c *GenerationCache) GetAffectedQueries(changedTables []string) []string {
 
 	for queryFile, tables := range c.QueryTableDeps {
 		for _, table := range tables {
-			for _, changedTable := range changedTables {
-				if table == changedTable {
-					affectedSet[queryFile] = true
-					break
-				}
+			if slices.Contains(changedTables, table) {
+				affectedSet[queryFile] = true
 			}
 		}
 	}
@@ -319,7 +316,7 @@ func (c *GenerationCache) PruneStaleQueryEntries(queriesDir string) []string {
 			delete(c.GeneratedFileChecksums, genFile)
 		}
 	}
-	sort.Strings(pruned)
+	slices.Sort(pruned)
 	return pruned
 }
 

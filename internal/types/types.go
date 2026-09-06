@@ -155,10 +155,10 @@ type MigrationFile struct {
 }
 
 type BackupData struct {
-	Timestamp string                 `json:"timestamp"`
-	Version   string                 `json:"version"`
-	Tables    map[string]interface{} `json:"tables"`
-	Comment   string                 `json:"comment"`
+	Timestamp string         `json:"timestamp"`
+	Version   string         `json:"version"`
+	Tables    map[string]any `json:"tables"`
+	Comment   string         `json:"comment"`
 }
 
 type MigrationStatusItem struct {

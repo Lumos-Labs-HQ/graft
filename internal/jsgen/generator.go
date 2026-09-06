@@ -563,8 +563,8 @@ func (g *Generator) mapSQLTypeToJS(sqlType string) string {
 	}
 
 	// Check for array types (TEXT[], INTEGER[], etc.)
-	if strings.HasSuffix(sqlTypeLower, "[]") {
-		baseType := strings.TrimSuffix(sqlTypeLower, "[]")
+	if before, ok := strings.CutSuffix(sqlTypeLower, "[]"); ok {
+		baseType := before
 		return g.mapSQLTypeToJS(baseType) + "[]"
 	}
 

@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"runtime"
+	"slices"
 	"strings"
 
 	"github.com/fatih/color"
@@ -38,13 +39,7 @@ Examples:
 		}
 
 		availablePlugins := plugin.GetAllPlugins()
-		valid := false
-		for _, name := range availablePlugins {
-			if name == pluginName {
-				valid = true
-				break
-			}
-		}
+		valid := slices.Contains(availablePlugins, pluginName)
 
 		if !valid {
 			color.Red("❌ Unknown plugin: %s", pluginName)

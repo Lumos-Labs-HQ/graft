@@ -90,12 +90,12 @@ func (a *Adapter) Connect(ctx context.Context, urlStr string) error {
 		keyspace = strings.TrimPrefix(parsed.Path, "/")
 		queryParams = parsed.Query()
 	} else {
-		if idx := strings.Index(cleanURL, "/"); idx >= 0 {
-			path := cleanURL[idx+1:]
-			hosts = cleanURL[:idx]
-			if qIdx := strings.Index(path, "?"); qIdx >= 0 {
-				keyspace = path[:qIdx]
-				queryParams, _ = url.ParseQuery(path[qIdx+1:])
+		if before, after, ok := strings.Cut(cleanURL, "/"); ok {
+			path := after
+			hosts = before
+			if before, after, ok := strings.Cut(path, "?"); ok {
+				keyspace = before
+				queryParams, _ = url.ParseQuery(after)
 			} else {
 				keyspace = path
 			}
@@ -197,7 +197,7 @@ func (a *Adapter) Connect(ctx context.Context, urlStr string) error {
 
 func parseHosts(raw string) []string {
 	var result []string
-	for _, p := range strings.Split(raw, ",") {
+	for p := range strings.SplitSeq(raw, ",") {
 		p = strings.TrimSpace(p)
 		if p == "" {
 			continue
@@ -427,7 +427,7 @@ func (a *Adapter) ExecuteQuery(ctx context.Context, query string) (*common.Query
 	return a.ExecuteQueryWithArgs(ctx, query)
 }
 
-func (a *Adapter) ExecuteQueryWithArgs(ctx context.Context, query string, args ...interface{}) (*common.QueryResult, error) {
+func (a *Adapter) ExecuteQueryWithArgs(ctx context.Context, query string, args ...any) (*common.QueryResult, error) {
 	iter := a.session.Query(query, args...).IterContext(ctx)
 	defer iter.Close()
 
@@ -441,9 +441,9 @@ func (a *Adapter) ExecuteQueryWithArgs(ctx context.Context, query string, args .
 		colNames[i] = c.Name
 	}
 
-	var results []map[string]interface{}
+	var results []map[string]any
 	for {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 		if !iter.MapScan(m) {
 			break
 		}
@@ -452,7 +452,7 @@ func (a *Adapter) ExecuteQueryWithArgs(ctx context.Context, query string, args .
 	return &common.QueryResult{Columns: colNames, Rows: results}, iter.Close()
 }
 
-func (a *Adapter) ExecuteDMLWithArgs(ctx context.Context, query string, args ...interface{}) error {
+func (a *Adapter) ExecuteDMLWithArgs(ctx context.Context, query string, args ...any) error {
 	return a.session.Query(query, args...).ExecContext(ctx)
 }
 

@@ -11,7 +11,6 @@ import (
 // for every supported database provider.
 func TestCodegen(t *testing.T) {
 	for _, db := range getDatabases() {
-		db := db
 		t.Run(db.Name, func(t *testing.T) {
 			t.Parallel()
 

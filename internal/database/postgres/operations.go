@@ -69,7 +69,7 @@ func (p *Adapter) CheckUniqueConstraint(ctx context.Context, tableName, constrai
 	return p.constraintExists(tableName, constraintName, "UNIQUE")
 }
 
-func (p *Adapter) GetTableData(ctx context.Context, tableName string) ([]map[string]interface{}, error) {
+func (p *Adapter) GetTableData(ctx context.Context, tableName string) ([]map[string]any, error) {
 	query := `
 		SELECT column_name, udt_name 
 		FROM information_schema.columns 
@@ -98,7 +98,7 @@ func (p *Adapter) GetTableData(ctx context.Context, tableName string) ([]map[str
 	columnRows.Close()
 
 	if len(selectCols) == 0 {
-		return []map[string]interface{}{}, nil
+		return []map[string]any{}, nil
 	}
 
 	selectQuery := fmt.Sprintf("SELECT %s FROM \"%s\"", strings.Join(selectCols, ", "), tableName)
@@ -109,11 +109,11 @@ func (p *Adapter) GetTableData(ctx context.Context, tableName string) ([]map[str
 	defer rows.Close()
 
 	columns := rows.FieldDescriptions()
-	var result []map[string]interface{}
+	var result []map[string]any
 
 	for rows.Next() {
-		values := make([]interface{}, len(columns))
-		valuePtrs := make([]interface{}, len(columns))
+		values := make([]any, len(columns))
+		valuePtrs := make([]any, len(columns))
 		for i := range values {
 			valuePtrs[i] = &values[i]
 		}
@@ -122,7 +122,7 @@ func (p *Adapter) GetTableData(ctx context.Context, tableName string) ([]map[str
 			return result, nil
 		}
 
-		row := make(map[string]interface{})
+		row := make(map[string]any)
 		for i, col := range columns {
 			val := values[i]
 			colName := string(col.Name)

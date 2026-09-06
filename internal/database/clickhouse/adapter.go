@@ -146,7 +146,7 @@ func (a *Adapter) ExecuteQuery(ctx context.Context, query string) (*common.Query
 	return a.ExecuteQueryWithArgs(ctx, query)
 }
 
-func (a *Adapter) ExecuteQueryWithArgs(ctx context.Context, query string, args ...interface{}) (*common.QueryResult, error) {
+func (a *Adapter) ExecuteQueryWithArgs(ctx context.Context, query string, args ...any) (*common.QueryResult, error) {
 	rows, err := a.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
@@ -158,17 +158,17 @@ func (a *Adapter) ExecuteQueryWithArgs(ctx context.Context, query string, args .
 		return nil, err
 	}
 
-	var results []map[string]interface{}
+	var results []map[string]any
 	for rows.Next() {
-		vals := make([]interface{}, len(cols))
-		ptrs := make([]interface{}, len(cols))
+		vals := make([]any, len(cols))
+		ptrs := make([]any, len(cols))
 		for i := range vals {
 			ptrs[i] = &vals[i]
 		}
 		if err := rows.Scan(ptrs...); err != nil {
 			return nil, err
 		}
-		row := make(map[string]interface{}, len(cols))
+		row := make(map[string]any, len(cols))
 		for i, c := range cols {
 			row[c] = vals[i]
 		}
@@ -177,7 +177,7 @@ func (a *Adapter) ExecuteQueryWithArgs(ctx context.Context, query string, args .
 	return &common.QueryResult{Columns: cols, Rows: results}, rows.Err()
 }
 
-func (a *Adapter) ExecuteDMLWithArgs(ctx context.Context, query string, args ...interface{}) error {
+func (a *Adapter) ExecuteDMLWithArgs(ctx context.Context, query string, args ...any) error {
 	_, err := a.db.ExecContext(ctx, query, args...)
 	return err
 }

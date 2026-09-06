@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -27,8 +28,8 @@ func NewService(adapter database.DatabaseAdapter, cfg *config.Config) *Service {
 
 func (s *Service) quote(name string) string {
 	// Handle ks.table qualified names — quote each segment separately
-	if dot := strings.Index(name, "."); dot >= 0 {
-		return s.adapter.QuoteIdentifier(name[:dot]) + "." + s.adapter.QuoteIdentifier(name[dot+1:])
+	if before, after, ok := strings.Cut(name, "."); ok {
+		return s.adapter.QuoteIdentifier(before) + "." + s.adapter.QuoteIdentifier(after)
 	}
 	return s.adapter.QuoteIdentifier(name)
 }
@@ -131,8 +132,8 @@ func (s *Service) GetTables() ([]common.TableInfo, error) {
 					continue
 				}
 				displayName := t
-				if idx := strings.Index(t, "."); idx >= 0 {
-					displayName = t[idx+1:]
+				if _, after, ok := strings.Cut(t, "."); ok {
+					displayName = after
 				}
 				entries = append(entries, entry{displayName, t, k})
 			}
@@ -719,10 +720,7 @@ func (s *Service) GetSchemaVisualization() (map[string]any, error) {
 
 	batchSize := 10
 	for i := 0; i < len(tables); i += batchSize {
-		end := i + batchSize
-		if end > len(tables) {
-			end = len(tables)
-		}
+		end := min(i+batchSize, len(tables))
 
 		// Process batch
 		for j := i; j < end; j++ {
@@ -1045,8 +1043,8 @@ func (s *Service) ExecuteSQL(query string) (*common.TableData, error) {
 }
 
 func extractKeyspace(name string) string {
-	if idx := strings.Index(name, "."); idx >= 0 {
-		return name[:idx]
+	if before, _, ok := strings.Cut(name, "."); ok {
+		return before
 	}
 	return ""
 }
@@ -1078,7 +1076,7 @@ func qualifyCQLQuery(query, ks string) string {
 	return out.String()
 }
 
-func (s *Service) UpdateRow(table string, id interface{}, data map[string]interface{}) error {
+func (s *Service) UpdateRow(table string, id any, data map[string]any) error {
 	_ = s.ensureCorrectSchema()
 
 	if err := common.ValidateIdentifier(table); err != nil {
@@ -1123,7 +1121,7 @@ func (s *Service) UpdateRow(table string, id interface{}, data map[string]interf
 	return s.adapter.ExecuteDMLWithArgs(s.ctx, query, args...)
 }
 
-func (s *Service) InsertRow(table string, data map[string]interface{}) error {
+func (s *Service) InsertRow(table string, data map[string]any) error {
 	_ = s.ensureCorrectSchema()
 
 	if err := common.ValidateIdentifier(table); err != nil {
@@ -1158,7 +1156,7 @@ func (s *Service) InsertRow(table string, data map[string]interface{}) error {
 	return s.adapter.ExecuteDMLWithArgs(s.ctx, query, args...)
 }
 
-func (s *Service) GetBranches() ([]map[string]interface{}, string, error) {
+func (s *Service) GetBranches() ([]map[string]any, string, error) {
 	if s.cfg == nil {
 		return nil, "", fmt.Errorf("no config loaded")
 	}
@@ -1174,9 +1172,9 @@ func (s *Service) GetBranches() ([]map[string]interface{}, string, error) {
 		return nil, "", err
 	}
 
-	result := make([]map[string]interface{}, len(branches))
+	result := make([]map[string]any, len(branches))
 	for i, b := range branches {
-		result[i] = map[string]interface{}{
+		result[i] = map[string]any{
 			"name":       b.Name,
 			"parent":     b.Parent,
 			"schema":     b.Schema,
@@ -1301,8 +1299,8 @@ func (s *Service) GetEditorHints() (map[string]any, error) {
 				var keyspaces []string
 				ksSet := make(map[string]bool)
 				for key := range schema {
-					if dot := strings.Index(key, "."); dot >= 0 {
-						ks := key[:dot]
+					if before, _, ok := strings.Cut(key, "."); ok {
+						ks := before
 						if !ksSet[ks] {
 							ksSet[ks] = true
 							keyspaces = append(keyspaces, ks)
@@ -1361,8 +1359,8 @@ func (s *Service) GetEditorHints() (map[string]any, error) {
 			}
 			mu.Lock()
 			schema[name] = cols
-			if dotIdx := strings.Index(name, "."); dotIdx >= 0 {
-				plainName := name[dotIdx+1:]
+			if _, after, ok := strings.Cut(name, "."); ok {
+				plainName := after
 				if _, exists := schema[plainName]; !exists {
 					schema[plainName] = cols
 				}
@@ -1376,8 +1374,8 @@ func (s *Service) GetEditorHints() (map[string]any, error) {
 	if provider == "scylla" || provider == "scylladb" || provider == "cassandra" {
 		ksSet := make(map[string]bool)
 		for name := range schema {
-			if dotIdx := strings.Index(name, "."); dotIdx >= 0 {
-				ks := name[:dotIdx]
+			if before, _, ok := strings.Cut(name, "."); ok {
+				ks := before
 				if !ksSet[ks] {
 					ksSet[ks] = true
 					keyspaces = append(keyspaces, ks)
@@ -1467,13 +1465,7 @@ func (s *Service) sortTablesByDependency(ctx context.Context, tables []string, c
 	// If we couldn't sort all tables (circular dependency), add remaining
 	if len(sorted) < len(tables) {
 		for _, t := range tables {
-			found := false
-			for _, s := range sorted {
-				if s == t {
-					found = true
-					break
-				}
-			}
+			found := slices.Contains(sorted, t)
 			if !found {
 				sorted = append(sorted, t)
 			}
@@ -1802,13 +1794,7 @@ func (s *Service) sortImportTablesByDependency(tables []common.ExportTable) []co
 
 	// Add any remaining tables (circular dependencies)
 	for _, t := range tables {
-		found := false
-		for _, name := range sortedNames {
-			if name == t.Name {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(sortedNames, t.Name)
 		if !found {
 			sortedNames = append(sortedNames, t.Name)
 		}
@@ -2313,7 +2299,7 @@ func sqlLiteral(v any) string {
 	if v == nil {
 		return "NULL"
 	}
-	if arr, ok := v.([]interface{}); ok {
+	if arr, ok := v.([]any); ok {
 		elems := make([]string, len(arr))
 		for i, elem := range arr {
 			if elem == nil {
@@ -2355,10 +2341,7 @@ func (s *Service) importTableData(ctx context.Context, tableName string, data []
 	inserted := 0
 	const batchSize = 500
 	for i := 0; i < len(data); i += batchSize {
-		end := i + batchSize
-		if end > len(data) {
-			end = len(data)
-		}
+		end := min(i+batchSize, len(data))
 		batch := data[i:end]
 
 		var valueGroups []string

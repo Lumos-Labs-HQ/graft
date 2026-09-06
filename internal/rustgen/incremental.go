@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -199,10 +200,7 @@ func (g *Generator) generateQueriesIncremental(queries []*parser.Query, fullRege
 	// before parallel generation starts, so identical structs are emitted once.
 	g.structPlan = g.planSharedStructs(groups)
 
-	numWorkers := runtime.NumCPU()
-	if numWorkers > len(groups) {
-		numWorkers = len(groups)
-	}
+	numWorkers := min(runtime.NumCPU(), len(groups))
 	if numWorkers < 1 {
 		numWorkers = 1
 	}
@@ -212,15 +210,13 @@ func (g *Generator) generateQueriesIncremental(queries []*parser.Query, fullRege
 	var wg sync.WaitGroup
 
 	for i := 0; i < numWorkers; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			for fg := range workCh {
 				if err := g.generateSingleRustFile(fg.src, fg.queries, fullRegen); err != nil {
 					errCh <- err
 				}
 			}
-		}()
+		})
 	}
 	for _, fg := range groups {
 		workCh <- fg
@@ -274,7 +270,7 @@ func (g *Generator) generateSingleRustFile(src string, queries []*parser.Query, 
 			for name := range imported {
 				names = append(names, name)
 			}
-			sort.Strings(names)
+			slices.Sort(names)
 			for _, name := range names {
 				ownerMod := toRustModuleName(g.structPlan.ownerSrc[name])
 				w.WriteString(fmt.Sprintf("use super::%s::%s;\n", ownerMod, name))

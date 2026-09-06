@@ -24,7 +24,7 @@ func TestHandlerPattern_MissingKey_Returns400(t *testing.T) {
 
 func TestHandlerPattern_Success_Returns200(t *testing.T) {
 	w := httptest.NewRecorder()
-	common.JSON(w, map[string]interface{}{"size": 42})
+	common.JSON(w, map[string]any{"size": 42})
 
 	if w.Code != http.StatusOK {
 		t.Errorf("status = %d, want 200", w.Code)

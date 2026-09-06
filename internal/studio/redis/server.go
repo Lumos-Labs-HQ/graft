@@ -122,7 +122,7 @@ func (s *Server) setupRoutes() {
 
 func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 	databases := make([]int, 16)
-	for i := 0; i < 16; i++ {
+	for i := range 16 {
 		databases[i] = i
 	}
 	s.Render(w, "index.html", common.Map{

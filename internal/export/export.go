@@ -45,14 +45,14 @@ func PerformExport(ctx context.Context, adapter database.DatabaseAdapter, export
 	exportData := types.BackupData{
 		Timestamp: time.Now().Format("2006-01-02 15:04:05"),
 		Version:   "1.0",
-		Tables:    make(map[string]interface{}, len(tables)),
+		Tables:    make(map[string]any, len(tables)),
 		Comment:   "Database export",
 	}
 
 	// Fetch table data in parallel
 	type tableResult struct {
 		name string
-		data []map[string]interface{}
+		data []map[string]any
 		err  error
 	}
 
@@ -99,7 +99,7 @@ func exportToJSON(data types.BackupData, exportPath string, schemaTables []types
 	timestamp := time.Now().Format("2006-01-02_15-04-05")
 	filePath := filepath.Join(exportPath, fmt.Sprintf("export_%s.json", timestamp))
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"version":   "2.0",
 		"timestamp": data.Timestamp,
 		"comment":   data.Comment,
@@ -123,13 +123,13 @@ func exportToJSON(data types.BackupData, exportPath string, schemaTables []types
 	return filePath, nil
 }
 
-func buildSchemaDDL(tables []types.SchemaTable, enums []types.SchemaEnum, indexMap map[string][]types.SchemaIndex) map[string]interface{} {
-	schema := map[string]interface{}{}
+func buildSchemaDDL(tables []types.SchemaTable, enums []types.SchemaEnum, indexMap map[string][]types.SchemaIndex) map[string]any {
+	schema := map[string]any{}
 
 	if len(enums) > 0 {
-		enumList := make([]map[string]interface{}, len(enums))
+		enumList := make([]map[string]any, len(enums))
 		for i, e := range enums {
-			enumList[i] = map[string]interface{}{
+			enumList[i] = map[string]any{
 				"name":   e.Name,
 				"values": e.Values,
 			}
@@ -138,14 +138,14 @@ func buildSchemaDDL(tables []types.SchemaTable, enums []types.SchemaEnum, indexM
 	}
 
 	if tables != nil {
-		tableList := make([]map[string]interface{}, 0, len(tables))
+		tableList := make([]map[string]any, 0, len(tables))
 		for _, t := range tables {
 			if strings.HasPrefix(t.Name, "_flash_") {
 				continue
 			}
-			cols := make([]map[string]interface{}, len(t.Columns))
+			cols := make([]map[string]any, len(t.Columns))
 			for j, c := range t.Columns {
-				col := map[string]interface{}{
+				col := map[string]any{
 					"name":       c.Name,
 					"type":       c.Type,
 					"nullable":   c.Nullable,
@@ -166,7 +166,7 @@ func buildSchemaDDL(tables []types.SchemaTable, enums []types.SchemaEnum, indexM
 				cols[j] = col
 			}
 			idxList := indexMap[t.Name]
-			tableList = append(tableList, map[string]interface{}{
+			tableList = append(tableList, map[string]any{
 				"name":    t.Name,
 				"columns": cols,
 				"indexes": idxList,

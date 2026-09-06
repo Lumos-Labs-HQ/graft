@@ -160,7 +160,6 @@ func setupProject(t *testing.T, dir string, db Database) {
 
 func TestAllDatabases(t *testing.T) {
 	for _, db := range getDatabases() {
-		db := db
 		t.Run(db.Name, func(t *testing.T) {
 			t.Parallel()
 

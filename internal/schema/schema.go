@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"slices"
 	"sort"
 	"strings"
 
@@ -64,7 +65,7 @@ func (sm *SchemaManager) parseSchemaDirAllV2(schemaDir string) ([]types.SchemaTa
 			sqlFiles = append(sqlFiles, entry.Name())
 		}
 	}
-	sort.Strings(sqlFiles)
+	slices.Sort(sqlFiles)
 
 	for _, fileName := range sqlFiles {
 		filePath := fmt.Sprintf("%s/%s", schemaDir, fileName)
@@ -187,7 +188,7 @@ func (sm *SchemaManager) sortTablesByDependencies(tables []types.SchemaTable) ([
 	}
 
 	// Process tables (sort queue only once for determinism)
-	sort.Strings(queue)
+	slices.Sort(queue)
 
 	for len(queue) > 0 {
 		tableName := queue[0]
@@ -418,11 +419,11 @@ func isCompositeType(upper string) bool {
 		return false
 	}
 	// Must have AS ( but NOT AS ENUM
-	asIdx := strings.Index(upper, " AS ")
-	if asIdx == -1 {
+	_, after0, ok := strings.Cut(upper, " AS ")
+	if !ok {
 		return false
 	}
-	after := strings.TrimSpace(upper[asIdx+4:])
+	after := strings.TrimSpace(after0)
 	return strings.HasPrefix(after, "(") && !strings.HasPrefix(after, "ENUM")
 }
 

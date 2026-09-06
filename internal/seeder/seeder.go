@@ -3,8 +3,10 @@ package seeder
 import (
 	"context"
 	"fmt"
+	"maps"
 	"os"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
@@ -28,7 +30,7 @@ type Seeder struct {
 	adapter     database.DatabaseAdapter
 	generator   *DataGenerator
 	graph       *DependencyGraph
-	insertedIDs map[string][]interface{}
+	insertedIDs map[string][]any
 	seedConfig  SeedConfig
 	enumTypes   map[string][]string // custom enum type name -> values
 }
@@ -56,7 +58,7 @@ func NewSeeder(cfg *config.Config) (*Seeder, error) {
 		adapter:     adapter,
 		generator:   generator,
 		graph:       NewDependencyGraph(),
-		insertedIDs: make(map[string][]interface{}),
+		insertedIDs: make(map[string][]any),
 		enumTypes:   make(map[string][]string),
 	}, nil
 }
@@ -243,8 +245,8 @@ func (s *Seeder) dryRun(tables map[string]*TableInfo, order []string) error {
 	return nil
 }
 
-func (s *Seeder) generateRecord(table *TableInfo, availableIDs map[string][]interface{}, usedFKValues map[string]map[interface{}]bool) map[string]interface{} {
-	record := make(map[string]interface{})
+func (s *Seeder) generateRecord(table *TableInfo, availableIDs map[string][]any, usedFKValues map[string]map[any]bool) map[string]any {
+	record := make(map[string]any)
 
 	// Coordinated timestamps: if a table has both created_at and updated_at,
 	// ensure updated_at >= created_at.
@@ -316,7 +318,7 @@ func (s *Seeder) generateRecord(table *TableInfo, availableIDs map[string][]inte
 }
 
 // pickUnusedID returns the first ID from ids that hasn't been used yet, or nil if all are used.
-func (s *Seeder) pickUnusedID(ids []interface{}, used map[interface{}]bool) interface{} {
+func (s *Seeder) pickUnusedID(ids []any, used map[any]bool) any {
 	// Shuffle a copy of the indices to avoid always picking in order
 	indices := make([]int, len(ids))
 	for i := range indices {
@@ -346,25 +348,23 @@ func (s *Seeder) seedTable(ctx context.Context, table *TableInfo, count int, nee
 	color.Cyan("  📝 Seeding %s (%d records)...", table.Name, count)
 
 	batchSize := adaptBatchSize(100, len(table.Columns))
-	batch := make([]map[string]interface{}, 0, batchSize)
+	batch := make([]map[string]any, 0, batchSize)
 
 	// availableIDs accumulates IDs from previous batches + current batch for self-referencing FKs
-	availableIDs := make(map[string][]interface{})
-	for k, v := range s.insertedIDs {
-		availableIDs[k] = v
-	}
+	availableIDs := make(map[string][]any)
+	maps.Copy(availableIDs, s.insertedIDs)
 
 	// usedFKValues tracks which FK values have been used for unique FK columns
 	// to prevent duplicate key violations on UNIQUE FK columns.
-	usedFKValues := make(map[string]map[interface{}]bool)
+	usedFKValues := make(map[string]map[any]bool)
 	for _, col := range table.Columns {
 		if col.IsFK && col.IsUnique {
-			usedFKValues[col.Name] = make(map[interface{}]bool)
+			usedFKValues[col.Name] = make(map[any]bool)
 		}
 	}
 
 	var inserted int
-	for i := 0; i < count; i++ {
+	for i := range count {
 		record := s.generateRecord(table, availableIDs, usedFKValues)
 		batch = append(batch, record)
 
@@ -406,7 +406,7 @@ func adaptBatchSize(userBatch int, columnCount int) int {
 	return userBatch
 }
 
-func (s *Seeder) insertBatch(ctx context.Context, tableName string, records []map[string]interface{}, pkColumn string, needsIDs bool) ([]interface{}, error) {
+func (s *Seeder) insertBatch(ctx context.Context, tableName string, records []map[string]any, pkColumn string, needsIDs bool) ([]any, error) {
 	if len(records) == 0 {
 		return nil, nil
 	}
@@ -424,7 +424,7 @@ func (s *Seeder) insertBatch(ctx context.Context, tableName string, records []ma
 	}
 
 	// ID-tracking path for MySQL/SQLite or single records: insert one by one.
-	ids := make([]interface{}, 0, len(records))
+	ids := make([]any, 0, len(records))
 	for _, record := range records {
 		id, err := s.insertRecord(ctx, tableName, record, pkColumn)
 		if err != nil {
@@ -437,7 +437,7 @@ func (s *Seeder) insertBatch(ctx context.Context, tableName string, records []ma
 	return ids, nil
 }
 
-func (s *Seeder) insertMultiRowReturning(ctx context.Context, tableName string, records []map[string]interface{}, pkColumn string) ([]interface{}, error) {
+func (s *Seeder) insertMultiRowReturning(ctx context.Context, tableName string, records []map[string]any, pkColumn string) ([]any, error) {
 	if !isValidIdentifier(tableName) {
 		return nil, fmt.Errorf("invalid table name: %s", tableName)
 	}
@@ -470,7 +470,7 @@ func (s *Seeder) insertMultiRowReturning(ctx context.Context, tableName string, 
 		return nil, err
 	}
 
-	ids := make([]interface{}, 0, len(result.Rows))
+	ids := make([]any, 0, len(result.Rows))
 	for _, row := range result.Rows {
 		if val, ok := row[pkColumn]; ok {
 			ids = append(ids, val)
@@ -479,7 +479,7 @@ func (s *Seeder) insertMultiRowReturning(ctx context.Context, tableName string, 
 	return ids, nil
 }
 
-func (s *Seeder) insertMultiRow(ctx context.Context, tableName string, records []map[string]interface{}) ([]interface{}, error) {
+func (s *Seeder) insertMultiRow(ctx context.Context, tableName string, records []map[string]any) ([]any, error) {
 	if !isValidIdentifier(tableName) {
 		return nil, fmt.Errorf("invalid table name: %s", tableName)
 	}
@@ -508,7 +508,7 @@ func (s *Seeder) insertMultiRow(ctx context.Context, tableName string, records [
 	return nil, err
 }
 
-func (s *Seeder) insertRecord(ctx context.Context, tableName string, record map[string]interface{}, pkColumn string) (interface{}, error) {
+func (s *Seeder) insertRecord(ctx context.Context, tableName string, record map[string]any, pkColumn string) (any, error) {
 	if !isValidIdentifier(tableName) {
 		return nil, fmt.Errorf("invalid table name: %s", tableName)
 	}
@@ -574,7 +574,7 @@ func (s *Seeder) insertRecord(ctx context.Context, tableName string, record map[
 	return nil, nil
 }
 
-func (s *Seeder) formatValue(val interface{}) string {
+func (s *Seeder) formatValue(val any) string {
 	if val == nil {
 		return "NULL"
 	}
@@ -845,8 +845,7 @@ func (s *Seeder) truncateTables(ctx context.Context, order []string) error {
 	errors := make([]string, 0, 4)
 
 	// Reverse order for truncation (to respect FK constraints)
-	for i := len(order) - 1; i >= 0; i-- {
-		tableName := order[i]
+	for _, tableName := range slices.Backward(order) {
 
 		if !isValidIdentifier(tableName) {
 			errors = append(errors, fmt.Sprintf("invalid table name: %s", tableName))

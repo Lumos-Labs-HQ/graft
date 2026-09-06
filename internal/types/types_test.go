@@ -76,7 +76,7 @@ func TestBackupData_Fields(t *testing.T) {
 	bd := BackupData{
 		Timestamp: "2024-01-01",
 		Version:   "1.0",
-		Tables:    map[string]interface{}{"users": []map[string]interface{}{{"id": 1}}},
+		Tables:    map[string]any{"users": []map[string]any{{"id": 1}}},
 		Comment:   "test backup",
 	}
 	if bd.Version != "1.0" || len(bd.Tables) != 1 {

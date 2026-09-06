@@ -142,7 +142,7 @@ func RunRaw(cmd *cobra.Command, args []string, queryFlag bool, fileFlag bool) er
 	return nil
 }
 
-func displayResultsTable(columns []string, rows []map[string]interface{}) {
+func displayResultsTable(columns []string, rows []map[string]any) {
 	if len(rows) == 0 {
 		return
 	}
@@ -204,7 +204,7 @@ func displayResultsTable(columns []string, rows []map[string]interface{}) {
 	fmt.Println("┘")
 }
 
-func formatValue(val interface{}) string {
+func formatValue(val any) string {
 	if val == nil {
 		return "NULL"
 	}
@@ -214,12 +214,12 @@ func formatValue(val interface{}) string {
 func splitSQLStatements(content string) []string {
 	var statements []string
 
-	parts := strings.Split(content, ";")
+	parts := strings.SplitSeq(content, ";")
 
-	for _, part := range parts {
+	for part := range parts {
 		// Strip comment lines, then check if anything remains
 		var nonCommentLines []string
-		for _, line := range strings.Split(part, "\n") {
+		for line := range strings.SplitSeq(part, "\n") {
 			trimmed := strings.TrimSpace(line)
 			if trimmed != "" && !strings.HasPrefix(trimmed, "--") {
 				nonCommentLines = append(nonCommentLines, line)

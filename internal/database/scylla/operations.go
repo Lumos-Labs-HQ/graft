@@ -13,9 +13,9 @@ import (
 // treated as keyspace-qualified and returned as-is (after quoting each part).
 // Otherwise the current keyspace is prepended.
 func (a *Adapter) qualifiedTableName(tableName string) string {
-	if dotIdx := strings.Index(tableName, "."); dotIdx >= 0 {
-		ks := stripNameQuotes(strings.TrimSpace(tableName[:dotIdx]))
-		tbl := stripNameQuotes(strings.TrimSpace(tableName[dotIdx+1:]))
+	if before, after, ok := strings.Cut(tableName, "."); ok {
+		ks := stripNameQuotes(strings.TrimSpace(before))
+		tbl := stripNameQuotes(strings.TrimSpace(after))
 		return fmt.Sprintf(`"%s"."%s"`, ks, tbl)
 	}
 	ks := a.currentKeyspace()
@@ -129,16 +129,16 @@ func (a *Adapter) CheckUniqueConstraint(_ context.Context, _, _ string) (bool, e
 	return false, nil
 }
 
-func (a *Adapter) GetTableData(ctx context.Context, tableName string) ([]map[string]interface{}, error) {
+func (a *Adapter) GetTableData(ctx context.Context, tableName string) ([]map[string]any, error) {
 	tblRef := a.qualifiedTableName(tableName)
 	q := a.session.Query(fmt.Sprintf(`SELECT * FROM %s`, tblRef))
 	q.PageSize(500)
 	iter := q.IterContext(ctx)
 	defer iter.Close()
 
-	var result []map[string]interface{}
+	var result []map[string]any
 	for {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 		if !iter.MapScan(m) {
 			break
 		}

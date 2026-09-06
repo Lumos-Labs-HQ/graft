@@ -3,6 +3,7 @@ package parser
 import (
 	"fmt"
 	"regexp"
+	"slices"
 	"strings"
 )
 
@@ -25,8 +26,7 @@ func matchesTableName(schemaName, queryName string) bool {
 		return true
 	}
 	// If the query reference is ks.tbl, extract just the table part and match
-	if dotIdx := strings.LastIndex(queryName, "."); dotIdx >= 0 {
-		tbl := queryName[dotIdx+1:]
+	if _, tbl, ok := strings.CutLast(queryName, "."); ok {
 		// Match against plain table name
 		if strings.EqualFold(schemaName, tbl) {
 			return true
@@ -37,8 +37,7 @@ func matchesTableName(schemaName, queryName string) bool {
 		}
 	}
 	// Schema name might be ks.tbl, query might be plain tbl
-	if dotIdx := strings.LastIndex(schemaName, "."); dotIdx >= 0 {
-		tbl := schemaName[dotIdx+1:]
+	if _, tbl, ok := strings.CutLast(schemaName, "."); ok {
 		if strings.EqualFold(tbl, queryName) {
 			return true
 		}
@@ -161,8 +160,8 @@ func rewriteINListToANY(sql string) string {
 	// Replace spans in reverse order (to preserve offsets). Keep each IN list's
 	// ORIGINAL first param number here; the single renumber pass below remaps
 	// every surviving $N — including these — to its final sequential value.
-	for i := len(spans) - 1; i >= 0; i-- {
-		s := spans[i]
+	for _, s := range slices.Backward(spans) {
+
 		replacement := fmt.Sprintf("%s = ANY($%d)", s.col, s.nums[0])
 		sql = sql[:s.start] + replacement + sql[s.end:]
 	}

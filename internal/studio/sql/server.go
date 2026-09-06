@@ -321,7 +321,7 @@ func (s *Server) handleUpdateRow(w http.ResponseWriter, r *http.Request) {
 	table := r.PathValue("name")
 	id := r.PathValue("id")
 
-	var data map[string]interface{}
+	var data map[string]any
 	if err := common.ParseJSON(r, &data); err != nil {
 		common.JSONError(w, http.StatusBadRequest, "Invalid request")
 		return
@@ -338,7 +338,7 @@ func (s *Server) handleUpdateRow(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleInsertRow(w http.ResponseWriter, r *http.Request) {
 	table := r.PathValue("name")
 
-	var data map[string]interface{}
+	var data map[string]any
 	if err := common.ParseJSON(r, &data); err != nil {
 		common.JSONError(w, http.StatusBadRequest, "Invalid request")
 		return

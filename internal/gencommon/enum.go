@@ -14,8 +14,8 @@ func ExtractEnumValues(columnType string) []string {
 	values := columnType[5 : len(columnType)-1]
 
 	var result []string
-	parts := strings.Split(values, ",")
-	for _, part := range parts {
+	parts := strings.SplitSeq(values, ",")
+	for part := range parts {
 		part = strings.TrimSpace(part)
 		part = strings.Trim(part, "'\"")
 		if part != "" {

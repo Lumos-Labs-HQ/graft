@@ -138,7 +138,7 @@ func TestCommentOutFile(t *testing.T) {
 		t.Error("commented file should contain TABLE DROPPED header")
 	}
 	// Every non-empty line should start with --
-	for _, line := range strings.Split(result, "\n") {
+	for line := range strings.SplitSeq(result, "\n") {
 		trimmed := strings.TrimSpace(line)
 		if trimmed == "" {
 			continue

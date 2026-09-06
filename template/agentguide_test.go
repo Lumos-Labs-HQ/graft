@@ -181,14 +181,14 @@ func TestGetAgentGuide_ContainsEnvExample(t *testing.T) {
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 func firstLine(s string) string {
-	if i := strings.IndexByte(s, '\n'); i >= 0 {
-		return s[:i]
+	if before, _, ok := strings.Cut(s, "\n"); ok {
+		return before
 	}
 	return s
 }
 
 func firstLineWith(s, substr string) string {
-	for _, line := range strings.Split(s, "\n") {
+	for line := range strings.SplitSeq(s, "\n") {
 		if strings.Contains(line, substr) {
 			return line
 		}

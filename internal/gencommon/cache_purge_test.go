@@ -247,13 +247,13 @@ func TestGenerationCache_ConcurrentAccess(t *testing.T) {
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
-		for i := 0; i < 500; i++ {
+		for range 500 {
 			c.UpdateQueryChecksum("f.sql", "h")
 			c.ShouldRegenerateQuery("f.sql", "h")
 			c.UpdateQueryDependencies("f.sql", []string{"t"})
 		}
 	}()
-	for i := 0; i < 500; i++ {
+	for range 500 {
 		c.ShouldRegenerateAll("sh", "ch")
 		c.PruneStaleQueryEntries("")
 	}

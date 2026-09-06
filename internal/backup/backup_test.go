@@ -17,7 +17,7 @@ func TestWriteBackupToFile_CreatesFile(t *testing.T) {
 	data := types.BackupData{
 		Timestamp: "2024-01-01 00:00:00",
 		Version:   "1.0",
-		Tables:    map[string]interface{}{"users": []map[string]interface{}{{"id": 1}}},
+		Tables:    map[string]any{"users": []map[string]any{{"id": 1}}},
 		Comment:   "test",
 	}
 
@@ -38,7 +38,7 @@ func TestWriteBackupToFile_ValidJSON(t *testing.T) {
 	data := types.BackupData{
 		Timestamp: "2024-01-01 00:00:00",
 		Version:   "1.0",
-		Tables:    map[string]interface{}{"users": []map[string]interface{}{{"id": 1, "name": "Alice"}}},
+		Tables:    map[string]any{"users": []map[string]any{{"id": 1, "name": "Alice"}}},
 		Comment:   "unit test",
 	}
 
@@ -59,7 +59,7 @@ func TestWriteBackupToFile_ValidJSON(t *testing.T) {
 
 func TestWriteBackupToFile_CreatesNestedDirs(t *testing.T) {
 	dir := filepath.Join(t.TempDir(), "deep", "nested", "backup")
-	data := types.BackupData{Tables: map[string]interface{}{}}
+	data := types.BackupData{Tables: map[string]any{}}
 
 	_, err := writeBackupToFile(data, dir)
 	if err != nil {
@@ -75,7 +75,7 @@ func TestWriteBackupToFile_EmptyTables(t *testing.T) {
 	data := types.BackupData{
 		Timestamp: "2024-01-01",
 		Version:   "1.0",
-		Tables:    map[string]interface{}{},
+		Tables:    map[string]any{},
 	}
 	path, err := writeBackupToFile(data, dir)
 	if err != nil {

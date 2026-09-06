@@ -31,16 +31,16 @@ type CollectionInfo struct {
 }
 
 type DocumentResult struct {
-	Documents  []map[string]interface{} `json:"documents"`
-	TotalCount int64                    `json:"total_count"`
-	Page       int                      `json:"page"`
-	Limit      int                      `json:"limit"`
+	Documents  []map[string]any `json:"documents"`
+	TotalCount int64            `json:"total_count"`
+	Page       int              `json:"page"`
+	Limit      int              `json:"limit"`
 }
 
 type IndexInfo struct {
-	Name   string                 `json:"name"`
-	Keys   map[string]interface{} `json:"keys"`
-	Unique bool                   `json:"unique"`
+	Name   string         `json:"name"`
+	Keys   map[string]any `json:"keys"`
+	Unique bool           `json:"unique"`
 }
 
 type Stats struct {
@@ -99,7 +99,7 @@ func (s *Service) CreateDatabase(dbName string) error {
 // GetDatabases lists all databases
 func (s *Service) GetDatabases() ([]DatabaseInfo, error) {
 	mongoAdapter, ok := s.adapter.(interface {
-		ListDatabases(context.Context) ([]map[string]interface{}, error)
+		ListDatabases(context.Context) ([]map[string]any, error)
 	})
 
 	if !ok {
@@ -195,7 +195,7 @@ func (s *Service) GetDocuments(database, collection string, page, limit int) (*D
 
 func (s *Service) GetDocumentsWithFilter(database, collection string, page, limit int, filter bson.M) (*DocumentResult, error) {
 	type MongoDocumentReader interface {
-		FindDocumentsInDB(ctx context.Context, database, collection string, filter bson.M, skip, limit int64) ([]map[string]interface{}, error)
+		FindDocumentsInDB(ctx context.Context, database, collection string, filter bson.M, skip, limit int64) ([]map[string]any, error)
 		CountDocumentsInDB(ctx context.Context, database, collection string, filter bson.M) (int64, error)
 		EstimatedDocumentCountInDB(ctx context.Context, database, collection string) (int64, error)
 	}
@@ -211,7 +211,7 @@ func (s *Service) GetDocumentsWithFilter(database, collection string, page, limi
 
 	skip := int64((page - 1) * limit)
 
-	var documents []map[string]interface{}
+	var documents []map[string]any
 	var totalCount int64
 	var docErr, countErr error
 	var wg sync.WaitGroup
@@ -249,9 +249,9 @@ func (s *Service) GetDocumentsWithFilter(database, collection string, page, limi
 }
 
 // InsertDocument inserts a new document
-func (s *Service) InsertDocument(collection string, document map[string]interface{}) (string, error) {
+func (s *Service) InsertDocument(collection string, document map[string]any) (string, error) {
 	type MongoDocumentWriter interface {
-		InsertDocument(ctx context.Context, collection string, document interface{}) (string, error)
+		InsertDocument(ctx context.Context, collection string, document any) (string, error)
 	}
 
 	mongoAdapter, ok := s.adapter.(MongoDocumentWriter)
@@ -265,9 +265,9 @@ func (s *Service) InsertDocument(collection string, document map[string]interfac
 }
 
 // UpdateDocument updates an existing document
-func (s *Service) UpdateDocument(collection, id string, document map[string]interface{}) error {
+func (s *Service) UpdateDocument(collection, id string, document map[string]any) error {
 	type MongoDocumentUpdater interface {
-		UpdateDocument(ctx context.Context, collection string, id string, update interface{}) error
+		UpdateDocument(ctx context.Context, collection string, id string, update any) error
 	}
 
 	mongoAdapter, ok := s.adapter.(MongoDocumentUpdater)
@@ -326,9 +326,9 @@ func (s *Service) BulkDeleteDocuments(collection string, ids []string) error {
 }
 
 // CreateCollection creates a new collection
-func (s *Service) CreateCollection(name string, options map[string]interface{}) error {
+func (s *Service) CreateCollection(name string, options map[string]any) error {
 	type MongoCollectionCreator interface {
-		CreateCollection(ctx context.Context, name string, options interface{}) error
+		CreateCollection(ctx context.Context, name string, options any) error
 	}
 
 	mongoAdapter, ok := s.adapter.(MongoCollectionCreator)
@@ -354,9 +354,9 @@ func (s *Service) DropCollection(name string) error {
 }
 
 // Aggregate runs an aggregation pipeline
-func (s *Service) Aggregate(collection string, pipeline []bson.M) ([]map[string]interface{}, error) {
+func (s *Service) Aggregate(collection string, pipeline []bson.M) ([]map[string]any, error) {
 	type MongoAggregator interface {
-		Aggregate(ctx context.Context, collection string, pipeline interface{}) ([]map[string]interface{}, error)
+		Aggregate(ctx context.Context, collection string, pipeline any) ([]map[string]any, error)
 	}
 
 	mongoAdapter, ok := s.adapter.(MongoAggregator)
@@ -370,7 +370,7 @@ func (s *Service) Aggregate(collection string, pipeline []bson.M) ([]map[string]
 // GetIndexes returns all indexes for a collection
 func (s *Service) GetIndexes(collection string) ([]IndexInfo, error) {
 	type MongoIndexReader interface {
-		ListIndexes(ctx context.Context, collection string) ([]map[string]interface{}, error)
+		ListIndexes(ctx context.Context, collection string) ([]map[string]any, error)
 	}
 
 	mongoAdapter, ok := s.adapter.(MongoIndexReader)
@@ -390,7 +390,7 @@ func (s *Service) GetIndexes(collection string) ([]IndexInfo, error) {
 		if name, ok := idx["name"].(string); ok {
 			info.Name = name
 		}
-		if key, ok := idx["key"].(map[string]interface{}); ok {
+		if key, ok := idx["key"].(map[string]any); ok {
 			info.Keys = key
 		}
 		if unique, ok := idx["unique"].(bool); ok {
@@ -404,9 +404,9 @@ func (s *Service) GetIndexes(collection string) ([]IndexInfo, error) {
 }
 
 // CreateIndex creates a new index
-func (s *Service) CreateIndex(collection string, keys map[string]interface{}, unique bool) error {
+func (s *Service) CreateIndex(collection string, keys map[string]any, unique bool) error {
 	type MongoIndexCreator interface {
-		CreateIndex(ctx context.Context, collection string, keys map[string]interface{}, unique bool) error
+		CreateIndex(ctx context.Context, collection string, keys map[string]any, unique bool) error
 	}
 
 	mongoAdapter, ok := s.adapter.(MongoIndexCreator)
@@ -432,9 +432,9 @@ func (s *Service) DropIndex(collection, indexName string) error {
 }
 
 // Query executes a custom query
-func (s *Service) Query(collection string, filter bson.M, limit int) ([]map[string]interface{}, error) {
+func (s *Service) Query(collection string, filter bson.M, limit int) ([]map[string]any, error) {
 	type MongoDocumentReader interface {
-		FindDocuments(ctx context.Context, collection string, filter bson.M, skip, limit int64) ([]map[string]interface{}, error)
+		FindDocuments(ctx context.Context, collection string, filter bson.M, skip, limit int64) ([]map[string]any, error)
 	}
 
 	mongoAdapter, ok := s.adapter.(MongoDocumentReader)
@@ -448,7 +448,7 @@ func (s *Service) Query(collection string, filter bson.M, limit int) ([]map[stri
 // GetStats returns database statistics
 func (s *Service) GetStats() (*Stats, error) {
 	type MongoStatsReader interface {
-		GetDatabaseStats(ctx context.Context) (map[string]interface{}, error)
+		GetDatabaseStats(ctx context.Context) (map[string]any, error)
 		ListCollections(ctx context.Context) ([]string, error)
 	}
 
@@ -491,9 +491,9 @@ func (s *Service) GetStats() (*Stats, error) {
 }
 
 // GetCollectionStats returns statistics for a specific collection
-func (s *Service) GetCollectionStats(collection string) (map[string]interface{}, error) {
+func (s *Service) GetCollectionStats(collection string) (map[string]any, error) {
 	type MongoCollectionLister interface {
-		GetCollectionStats(ctx context.Context, collection string) (map[string]interface{}, error)
+		GetCollectionStats(ctx context.Context, collection string) (map[string]any, error)
 	}
 
 	mongoAdapter, ok := s.adapter.(MongoCollectionLister)
@@ -515,7 +515,7 @@ type SchemaField struct {
 // GetCollectionSchema returns inferred schema from a sample of documents
 func (s *Service) GetCollectionSchema(database, collection string) ([]SchemaField, error) {
 	type MongoSchemaReader interface {
-		GetCollectionSchemaInDB(ctx context.Context, database, collection string, sampleSize int) ([]map[string]interface{}, error)
+		GetCollectionSchemaInDB(ctx context.Context, database, collection string, sampleSize int) ([]map[string]any, error)
 	}
 
 	mongoAdapter, ok := s.adapter.(MongoSchemaReader)
@@ -542,7 +542,7 @@ func (s *Service) GetCollectionSchema(database, collection string) ([]SchemaFiel
 }
 
 // processDocumentTypes ensures proper types for MongoDB operations
-func (s *Service) processDocumentTypes(doc map[string]interface{}) {
+func (s *Service) processDocumentTypes(doc map[string]any) {
 	for key, value := range doc {
 		switch v := value.(type) {
 		case string:
@@ -556,11 +556,11 @@ func (s *Service) processDocumentTypes(doc map[string]interface{}) {
 			if t, err := time.Parse(time.RFC3339, v); err == nil {
 				doc[key] = primitive.NewDateTimeFromTime(t)
 			}
-		case map[string]interface{}:
+		case map[string]any:
 			s.processDocumentTypes(v)
-		case []interface{}:
+		case []any:
 			for i, item := range v {
-				if m, ok := item.(map[string]interface{}); ok {
+				if m, ok := item.(map[string]any); ok {
 					s.processDocumentTypes(m)
 					v[i] = m
 				}
@@ -569,21 +569,21 @@ func (s *Service) processDocumentTypes(doc map[string]interface{}) {
 	}
 }
 
-func getString(m map[string]interface{}, key string) string {
+func getString(m map[string]any, key string) string {
 	if v, ok := m[key].(string); ok {
 		return v
 	}
 	return ""
 }
 
-func getBool(m map[string]interface{}, key string) bool {
+func getBool(m map[string]any, key string) bool {
 	if v, ok := m[key].(bool); ok {
 		return v
 	}
 	return false
 }
 
-func getInt(m map[string]interface{}, key string) int {
+func getInt(m map[string]any, key string) int {
 	switch v := m[key].(type) {
 	case int:
 		return v

@@ -9,7 +9,7 @@ import (
 )
 
 // ValidateTableReferences checks if tables referenced in queries exist in the schema
-func ValidateTableReferences(sql string, schema interface{}, sourceFile string) error {
+func ValidateTableReferences(sql string, schema any, sourceFile string) error {
 	if schema == nil {
 		return nil
 	}
@@ -85,7 +85,7 @@ func ValidateTableReferences(sql string, schema interface{}, sourceFile string) 
 		if !tableExists {
 			plain := strings.ToLower(tableName)
 			for name := range tableNames {
-				if dotIdx := strings.LastIndex(name, "."); dotIdx >= 0 && name[dotIdx+1:] == plain {
+				if _, after, ok := strings.CutLast(name, "."); ok && after == plain {
 					tableExists = true
 					break
 				}

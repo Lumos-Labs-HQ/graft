@@ -77,11 +77,9 @@ func (s *Service) getPostgresMetrics(ctx context.Context, m *DBMetrics) (*DBMetr
 	var wg sync.WaitGroup
 
 	run := func(fn func()) {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			fn()
-		}()
+		})
 	}
 
 	run(func() {
@@ -246,8 +244,7 @@ func (s *Service) getMySQLMetrics(ctx context.Context, m *DBMetrics) (*DBMetrics
 	var wg sync.WaitGroup
 
 	run := func(fn func()) {
-		wg.Add(1)
-		go func() { defer wg.Done(); fn() }()
+		wg.Go(func() { ; fn() })
 	}
 
 	run(func() {
@@ -440,8 +437,7 @@ func (s *Service) getScyllaMetrics(ctx context.Context, m *DBMetrics) (*DBMetric
 	var wg sync.WaitGroup
 
 	run := func(fn func()) {
-		wg.Add(1)
-		go func() { defer wg.Done(); fn() }()
+		wg.Go(func() { ; fn() })
 	}
 
 	for _, ks := range userKS {
@@ -504,7 +500,7 @@ func isSystemKeyspace(ks string) bool {
 }
 
 // helpers
-func toInt(v interface{}) int {
+func toInt(v any) int {
 	if v == nil {
 		return 0
 	}
@@ -533,11 +529,11 @@ func toInt(v interface{}) int {
 	return n
 }
 
-func toInt64(v interface{}) int64 {
+func toInt64(v any) int64 {
 	return int64(toInt(v))
 }
 
-func toFloat(v interface{}) float64 {
+func toFloat(v any) float64 {
 	if v == nil {
 		return 0
 	}
@@ -566,7 +562,7 @@ func toFloat(v interface{}) float64 {
 	return f
 }
 
-func toString(v interface{}) string {
+func toString(v any) string {
 	if v == nil {
 		return ""
 	}

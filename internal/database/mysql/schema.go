@@ -111,7 +111,7 @@ func (m *Adapter) GetAllTablesColumns(ctx context.Context, tableNames []string) 
 	}
 
 	placeholders := make([]string, len(tableNames))
-	args := make([]interface{}, len(tableNames))
+	args := make([]any, len(tableNames))
 	for i, name := range tableNames {
 		placeholders[i] = "?"
 		args[i] = name
@@ -254,7 +254,7 @@ func (m *Adapter) GetAllTablesIndexes(ctx context.Context, tableNames []string) 
 	}
 
 	placeholders := make([]string, len(tableNames))
-	args := make([]interface{}, len(tableNames))
+	args := make([]any, len(tableNames))
 	for i, name := range tableNames {
 		placeholders[i] = "?"
 		args[i] = name
@@ -279,7 +279,7 @@ func (m *Adapter) GetAllTablesIndexes(ctx context.Context, tableNames []string) 
 	`, strings.Join(placeholders, ","), strings.Join(placeholders, ","))
 
 	// Double the args since we use tableNames twice in the query
-	allArgs := make([]interface{}, len(args)*2)
+	allArgs := make([]any, len(args)*2)
 	copy(allArgs, args)
 	copy(allArgs[len(args):], args)
 

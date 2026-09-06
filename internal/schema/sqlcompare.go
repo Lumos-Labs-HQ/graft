@@ -2,7 +2,7 @@ package schema
 
 import (
 	"regexp"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/Lumos-Labs-HQ/flash/internal/types"
@@ -332,7 +332,7 @@ func (sc *SQLComparator) generateCleanSQL(tables map[string]*TableStructure) str
 	for name := range tables {
 		tableNames = append(tableNames, name)
 	}
-	sort.Strings(tableNames)
+	slices.Sort(tableNames)
 
 	for i, tableName := range tableNames {
 		if i > 0 {
@@ -471,8 +471,8 @@ func (sc *SQLComparator) normalizeDefault(defaultVal string) string {
 	default:
 		// The postgres adapter should have already cleaned this, but double-check
 		// Remove type casts if still present
-		if idx := strings.Index(defaultVal, "::"); idx != -1 {
-			return strings.TrimSpace(defaultVal[:idx])
+		if before, _, ok := strings.Cut(defaultVal, "::"); ok {
+			return strings.TrimSpace(before)
 		}
 		return defaultVal
 	}

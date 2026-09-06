@@ -34,7 +34,7 @@ func (bm *BackupManager) CreateBackup(ctx context.Context, comment string, getAp
 	backup := types.BackupData{
 		Timestamp: time.Now().Format("2006-01-02_15-04-05"),
 		Version:   fmt.Sprintf("%d_migrations", len(applied)),
-		Tables:    make(map[string]interface{}),
+		Tables:    make(map[string]any),
 		Comment:   comment,
 	}
 
@@ -80,7 +80,7 @@ func (bm *BackupManager) backupTable(ctx context.Context, table string, backup *
 	}
 	defer rows.Close()
 
-	var tableData []map[string]interface{}
+	var tableData []map[string]any
 	fieldDescriptions := rows.FieldDescriptions()
 
 	for rows.Next() {
@@ -89,7 +89,7 @@ func (bm *BackupManager) backupTable(ctx context.Context, table string, backup *
 			continue
 		}
 
-		rowData := make(map[string]interface{}, len(fieldDescriptions))
+		rowData := make(map[string]any, len(fieldDescriptions))
 		for i, fd := range fieldDescriptions {
 			rowData[string(fd.Name)] = values[i]
 		}
@@ -162,7 +162,7 @@ func PerformBackupWithAdapter(ctx context.Context, adapter database.DatabaseAdap
 	backupData := types.BackupData{
 		Timestamp: time.Now().Format("2006-01-02 15:04:05"),
 		Version:   "1.0",
-		Tables:    make(map[string]interface{}, len(tables)),
+		Tables:    make(map[string]any, len(tables)),
 		Comment:   comment,
 	}
 

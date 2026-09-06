@@ -37,10 +37,7 @@ func (g *Generator) generateQueriesIncremental(queries []*parser.Query, fullRege
 	usedNames := make(map[string]int)
 	var usedNamesMu sync.Mutex
 
-	numWorkers := runtime.NumCPU()
-	if numWorkers > len(fileGroups) {
-		numWorkers = len(fileGroups)
-	}
+	numWorkers := min(runtime.NumCPU(), len(fileGroups))
 
 	type generateResult struct {
 		err error
@@ -51,14 +48,12 @@ func (g *Generator) generateQueriesIncremental(queries []*parser.Query, fullRege
 
 	var wg sync.WaitGroup
 	for i := 0; i < numWorkers; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			for fg := range workChan {
 				err := g.generateSinglePyFile(fg.sourceFile, fg.queries, fullRegen, &usedNamesMu, usedNames)
 				resultChan <- generateResult{err: err}
 			}
-		}()
+		})
 	}
 
 	for _, fg := range fileGroups {

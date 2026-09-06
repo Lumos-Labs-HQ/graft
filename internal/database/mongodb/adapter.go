@@ -3,6 +3,7 @@ package mongodb
 import (
 	"context"
 	"fmt"
+	"maps"
 	"runtime"
 	"sort"
 	"strings"
@@ -167,7 +168,7 @@ func (a *Adapter) GetTableColumns(ctx context.Context, tableName string) ([]type
 	return columns, nil
 }
 
-func (a *Adapter) GetTableData(ctx context.Context, tableName string) ([]map[string]interface{}, error) {
+func (a *Adapter) GetTableData(ctx context.Context, tableName string) ([]map[string]any, error) {
 	coll := a.currentDB().Collection(tableName)
 	cursor, err := coll.Find(ctx, bson.M{}, options.Find().SetLimit(1000).SetSort(bson.D{{Key: "_id", Value: 1}}))
 	if err != nil {
@@ -187,12 +188,9 @@ func (a *Adapter) GetTableData(ctx context.Context, tableName string) ([]map[str
 		return nil, fmt.Errorf("cursor error while reading table data: %w", err)
 	}
 
-	results := make([]map[string]interface{}, len(docs))
+	results := make([]map[string]any, len(docs))
 	var wg sync.WaitGroup
-	numWorkers := runtime.NumCPU()
-	if numWorkers > len(docs) {
-		numWorkers = len(docs)
-	}
+	numWorkers := min(runtime.NumCPU(), len(docs))
 	if numWorkers < 1 {
 		numWorkers = 1
 	}
@@ -238,7 +236,7 @@ func (a *Adapter) GetAllTableRowCounts(ctx context.Context, tableNames []string)
 }
 
 // ExecuteMongoQuery executes a MongoDB query string
-func (a *Adapter) ExecuteMongoQuery(ctx context.Context, query string) ([]map[string]interface{}, error) {
+func (a *Adapter) ExecuteMongoQuery(ctx context.Context, query string) ([]map[string]any, error) {
 	query = strings.TrimSpace(query)
 	query = strings.TrimPrefix(query, "db.")
 
@@ -281,7 +279,7 @@ func (a *Adapter) ExecuteMongoQuery(ctx context.Context, query string) ([]map[st
 			return nil, fmt.Errorf("cursor error: %w", err)
 		}
 
-		results := make([]map[string]interface{}, len(docs))
+		results := make([]map[string]any, len(docs))
 		var wg sync.WaitGroup
 		for i, doc := range docs {
 			wg.Add(1)
@@ -302,7 +300,7 @@ func (a *Adapter) ExecuteMongoQuery(ctx context.Context, query string) ([]map[st
 		if err != nil {
 			return nil, err
 		}
-		return []map[string]interface{}{{"count": count}}, nil
+		return []map[string]any{{"count": count}}, nil
 	}
 
 	return nil, fmt.Errorf("unsupported operation. Supported: find({}), count()")
@@ -330,27 +328,25 @@ func (a *Adapter) ListCollectionsInDB(ctx context.Context, database string) ([]s
 }
 
 // GetCollectionStats returns statistics for a collection
-func (a *Adapter) GetCollectionStats(ctx context.Context, collection string) (map[string]interface{}, error) {
+func (a *Adapter) GetCollectionStats(ctx context.Context, collection string) (map[string]any, error) {
 	var result bson.M
 	err := a.currentDB().RunCommand(ctx, bson.D{{Key: "collStats", Value: collection}}).Decode(&result)
 	if err != nil {
 		return nil, err
 	}
 
-	stats := make(map[string]interface{})
-	for k, v := range result {
-		stats[k] = v
-	}
+	stats := make(map[string]any)
+	maps.Copy(stats, result)
 	return stats, nil
 }
 
 // FindDocuments finds documents in a collection with pagination
-func (a *Adapter) FindDocuments(ctx context.Context, collection string, filter bson.M, skip, limit int64) ([]map[string]interface{}, error) {
+func (a *Adapter) FindDocuments(ctx context.Context, collection string, filter bson.M, skip, limit int64) ([]map[string]any, error) {
 	return a.FindDocumentsInDB(ctx, a.currentDBName(), collection, filter, skip, limit)
 }
 
 // FindDocumentsInDB finds documents in a specific database and collection with pagination
-func (a *Adapter) FindDocumentsInDB(ctx context.Context, database, collection string, filter bson.M, skip, limit int64) ([]map[string]interface{}, error) {
+func (a *Adapter) FindDocumentsInDB(ctx context.Context, database, collection string, filter bson.M, skip, limit int64) ([]map[string]any, error) {
 	db := a.client.Database(database)
 	coll := db.Collection(collection)
 	opts := options.Find().SetSkip(skip).SetLimit(limit).SetSort(bson.D{{Key: "_id", Value: 1}})
@@ -374,12 +370,9 @@ func (a *Adapter) FindDocumentsInDB(ctx context.Context, database, collection st
 		return nil, fmt.Errorf("cursor error: %w", err)
 	}
 
-	results := make([]map[string]interface{}, len(docs))
+	results := make([]map[string]any, len(docs))
 	var wg sync.WaitGroup
-	numWorkers := runtime.NumCPU()
-	if numWorkers > len(docs) {
-		numWorkers = len(docs)
-	}
+	numWorkers := min(runtime.NumCPU(), len(docs))
 	if numWorkers < 1 {
 		numWorkers = 1
 	}
@@ -432,7 +425,7 @@ func (a *Adapter) EstimatedDocumentCountInDB(ctx context.Context, database, coll
 }
 
 // InsertDocument inserts a document into a collection
-func (a *Adapter) InsertDocument(ctx context.Context, collection string, document interface{}) (string, error) {
+func (a *Adapter) InsertDocument(ctx context.Context, collection string, document any) (string, error) {
 	coll := a.currentDB().Collection(collection)
 	result, err := coll.InsertOne(ctx, document)
 	if err != nil {
@@ -442,7 +435,7 @@ func (a *Adapter) InsertDocument(ctx context.Context, collection string, documen
 }
 
 // UpdateDocument updates a document in a collection
-func (a *Adapter) UpdateDocument(ctx context.Context, collection string, id string, update interface{}) error {
+func (a *Adapter) UpdateDocument(ctx context.Context, collection string, id string, update any) error {
 	coll := a.currentDB().Collection(collection)
 	objectID, err := parseObjectID(id)
 	if err != nil {
@@ -467,7 +460,7 @@ func (a *Adapter) DeleteDocument(ctx context.Context, collection string, id stri
 func (a *Adapter) BulkDeleteDocuments(ctx context.Context, collection string, ids []string) (int64, error) {
 	coll := a.currentDB().Collection(collection)
 
-	objectIDs := make([]interface{}, 0, len(ids))
+	objectIDs := make([]any, 0, len(ids))
 	for _, id := range ids {
 		objectID, err := parseObjectID(id)
 		if err != nil {
@@ -484,7 +477,7 @@ func (a *Adapter) BulkDeleteDocuments(ctx context.Context, collection string, id
 }
 
 // CreateCollection creates a new collection
-func (a *Adapter) CreateCollection(ctx context.Context, name string, opts interface{}) error {
+func (a *Adapter) CreateCollection(ctx context.Context, name string, opts any) error {
 	var createOpts []*options.CreateCollectionOptions
 	if o, ok := opts.(*options.CreateCollectionOptions); ok && o != nil {
 		createOpts = append(createOpts, o)
@@ -498,7 +491,7 @@ func (a *Adapter) DropCollection(ctx context.Context, name string) error {
 }
 
 // Aggregate runs an aggregation pipeline
-func (a *Adapter) Aggregate(ctx context.Context, collection string, pipeline interface{}) ([]map[string]interface{}, error) {
+func (a *Adapter) Aggregate(ctx context.Context, collection string, pipeline any) ([]map[string]any, error) {
 	coll := a.currentDB().Collection(collection)
 	cursor, err := coll.Aggregate(ctx, pipeline)
 	if err != nil {
@@ -518,7 +511,7 @@ func (a *Adapter) Aggregate(ctx context.Context, collection string, pipeline int
 		return nil, fmt.Errorf("cursor error: %w", err)
 	}
 
-	results := make([]map[string]interface{}, len(docs))
+	results := make([]map[string]any, len(docs))
 	var wg sync.WaitGroup
 	for i, doc := range docs {
 		wg.Add(1)
@@ -535,7 +528,7 @@ func (a *Adapter) Aggregate(ctx context.Context, collection string, pipeline int
 }
 
 // ListIndexes lists all indexes for a collection
-func (a *Adapter) ListIndexes(ctx context.Context, collection string) ([]map[string]interface{}, error) {
+func (a *Adapter) ListIndexes(ctx context.Context, collection string) ([]map[string]any, error) {
 	coll := a.currentDB().Collection(collection)
 	cursor, err := coll.Indexes().List(ctx)
 	if err != nil {
@@ -555,7 +548,7 @@ func (a *Adapter) ListIndexes(ctx context.Context, collection string) ([]map[str
 		return nil, fmt.Errorf("cursor error: %w", err)
 	}
 
-	results := make([]map[string]interface{}, len(items))
+	results := make([]map[string]any, len(items))
 	var wg sync.WaitGroup
 	for i, index := range items {
 		wg.Add(1)
@@ -572,7 +565,7 @@ func (a *Adapter) ListIndexes(ctx context.Context, collection string) ([]map[str
 }
 
 // CreateIndex creates a new index on a collection
-func (a *Adapter) CreateIndex(ctx context.Context, collection string, keys map[string]interface{}, unique bool) error {
+func (a *Adapter) CreateIndex(ctx context.Context, collection string, keys map[string]any, unique bool) error {
 	coll := a.currentDB().Collection(collection)
 	indexModel := mongo.IndexModel{
 		Keys:    keys,
@@ -590,30 +583,28 @@ func (a *Adapter) DropIndex(ctx context.Context, collection string, indexName st
 }
 
 // GetDatabaseStats returns database statistics
-func (a *Adapter) GetDatabaseStats(ctx context.Context) (map[string]interface{}, error) {
+func (a *Adapter) GetDatabaseStats(ctx context.Context) (map[string]any, error) {
 	var result bson.M
 	err := a.currentDB().RunCommand(ctx, bson.D{{Key: "dbStats", Value: 1}}).Decode(&result)
 	if err != nil {
 		return nil, err
 	}
 
-	stats := make(map[string]interface{})
-	for k, v := range result {
-		stats[k] = v
-	}
+	stats := make(map[string]any)
+	maps.Copy(stats, result)
 	return stats, nil
 }
 
 // ListDatabases lists all databases
-func (a *Adapter) ListDatabases(ctx context.Context) ([]map[string]interface{}, error) {
+func (a *Adapter) ListDatabases(ctx context.Context) ([]map[string]any, error) {
 	databases, err := a.client.ListDatabases(ctx, bson.M{})
 	if err != nil {
 		return nil, err
 	}
 
-	result := make([]map[string]interface{}, 0)
+	result := make([]map[string]any, 0)
 	for _, db := range databases.Databases {
-		result = append(result, map[string]interface{}{
+		result = append(result, map[string]any{
 			"name":       db.Name,
 			"sizeOnDisk": db.SizeOnDisk,
 			"empty":      db.Empty,
@@ -659,7 +650,7 @@ func (a *Adapter) CreateDatabase(ctx context.Context, dbName string) error {
 }
 
 // GetCollectionSchemaInDB samples documents and returns inferred schema as maps
-func (a *Adapter) GetCollectionSchemaInDB(ctx context.Context, database, collection string, sampleSize int) ([]map[string]interface{}, error) {
+func (a *Adapter) GetCollectionSchemaInDB(ctx context.Context, database, collection string, sampleSize int) ([]map[string]any, error) {
 	db := a.client.Database(database)
 	coll := db.Collection(collection)
 
@@ -674,7 +665,7 @@ func (a *Adapter) GetCollectionSchemaInDB(ctx context.Context, database, collect
 	}
 	defer cursor.Close(ctx)
 
-	fields := make(map[string]map[string]interface{})
+	fields := make(map[string]map[string]any)
 	totalDocs := 0
 
 	for cursor.Next(ctx) {
@@ -686,7 +677,7 @@ func (a *Adapter) GetCollectionSchemaInDB(ctx context.Context, database, collect
 
 		for key, value := range doc {
 			if _, ok := fields[key]; !ok {
-				fields[key] = map[string]interface{}{
+				fields[key] = map[string]any{
 					"name":     key,
 					"type":     "",
 					"nullable": false,
@@ -711,7 +702,7 @@ func (a *Adapter) GetCollectionSchemaInDB(ctx context.Context, database, collect
 		return nil, fmt.Errorf("cursor error: %w", err)
 	}
 
-	result := make([]map[string]interface{}, 0, len(fields))
+	result := make([]map[string]any, 0, len(fields))
 	for _, field := range fields {
 		count := field["count"].(int)
 		if count < totalDocs {

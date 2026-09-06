@@ -270,7 +270,7 @@ func (m *Migrator) createExport() error {
 	exportData := types.BackupData{
 		Timestamp: time.Now().Format("2006-01-02 15:04:05"),
 		Version:   "1.0",
-		Tables:    make(map[string]interface{}),
+		Tables:    make(map[string]any),
 		Comment:   "Pre-conflict export",
 	}
 

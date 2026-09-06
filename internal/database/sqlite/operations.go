@@ -107,7 +107,7 @@ func (s *Adapter) CheckUniqueConstraint(ctx context.Context, tableName, constrai
 	return false, nil
 }
 
-func (s *Adapter) GetTableData(ctx context.Context, tableName string) ([]map[string]interface{}, error) {
+func (s *Adapter) GetTableData(ctx context.Context, tableName string) ([]map[string]any, error) {
 	rows, err := s.db.QueryContext(ctx, fmt.Sprintf("SELECT * FROM \"%s\"", tableName))
 	if err != nil {
 		return nil, err
@@ -119,10 +119,10 @@ func (s *Adapter) GetTableData(ctx context.Context, tableName string) ([]map[str
 		return nil, err
 	}
 
-	var result []map[string]interface{}
+	var result []map[string]any
 	for rows.Next() {
-		values := make([]interface{}, len(columns))
-		valuePtrs := make([]interface{}, len(columns))
+		values := make([]any, len(columns))
+		valuePtrs := make([]any, len(columns))
 		for i := range values {
 			valuePtrs[i] = &values[i]
 		}
@@ -131,7 +131,7 @@ func (s *Adapter) GetTableData(ctx context.Context, tableName string) ([]map[str
 			continue
 		}
 
-		row := make(map[string]interface{})
+		row := make(map[string]any)
 		for i, col := range columns {
 			row[col] = formatValue(values[i])
 		}
@@ -141,7 +141,7 @@ func (s *Adapter) GetTableData(ctx context.Context, tableName string) ([]map[str
 }
 
 // formatValue converts database values to display-friendly formats
-func formatValue(val interface{}) interface{} {
+func formatValue(val any) any {
 	if val == nil {
 		return nil
 	}

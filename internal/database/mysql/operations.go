@@ -63,7 +63,7 @@ func (m *Adapter) checkConstraint(tableName, constraintName, constraintType stri
 	return exists, err
 }
 
-func (m *Adapter) GetTableData(ctx context.Context, tableName string) ([]map[string]interface{}, error) {
+func (m *Adapter) GetTableData(ctx context.Context, tableName string) ([]map[string]any, error) {
 	rows, err := m.db.QueryContext(ctx, fmt.Sprintf("SELECT * FROM `%s`", tableName))
 	if err != nil {
 		return nil, err
@@ -75,10 +75,10 @@ func (m *Adapter) GetTableData(ctx context.Context, tableName string) ([]map[str
 		return nil, err
 	}
 
-	var result []map[string]interface{}
+	var result []map[string]any
 	for rows.Next() {
-		values := make([]interface{}, len(columns))
-		valuePtrs := make([]interface{}, len(columns))
+		values := make([]any, len(columns))
+		valuePtrs := make([]any, len(columns))
 		for i := range values {
 			valuePtrs[i] = &values[i]
 		}
@@ -87,7 +87,7 @@ func (m *Adapter) GetTableData(ctx context.Context, tableName string) ([]map[str
 			return nil, err
 		}
 
-		row := make(map[string]interface{})
+		row := make(map[string]any)
 		for i, col := range columns {
 			row[col] = values[i]
 		}

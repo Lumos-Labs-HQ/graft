@@ -40,8 +40,8 @@ func New() *Adapter {
 
 func (m *Adapter) Connect(ctx context.Context, url string) error {
 	dsn := url
-	if strings.HasPrefix(url, "mysql://") {
-		dsn = strings.TrimPrefix(url, "mysql://")
+	if after, ok := strings.CutPrefix(url, "mysql://"); ok {
+		dsn = after
 
 		atIndex := strings.Index(dsn, "@")
 		if atIndex > 0 {
@@ -86,10 +86,7 @@ func (m *Adapter) Connect(ctx context.Context, url string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open MySQL connection: %w", err)
 	}
-	maxConns := runtime.GOMAXPROCS(0) * 2
-	if maxConns < 4 {
-		maxConns = 4
-	}
+	maxConns := max(runtime.GOMAXPROCS(0)*2, 4)
 	db.SetMaxOpenConns(maxConns)
 	db.SetMaxIdleConns(maxConns / 2)
 	db.SetConnMaxLifetime(30 * time.Minute)
@@ -328,7 +325,7 @@ func (m *Adapter) ExecuteQuery(ctx context.Context, query string) (*common.Query
 		}
 		return &common.QueryResult{
 			Columns: []string{},
-			Rows:    []map[string]interface{}{},
+			Rows:    []map[string]any{},
 		}, nil
 	}
 
@@ -343,10 +340,10 @@ func (m *Adapter) ExecuteQuery(ctx context.Context, query string) (*common.Query
 		return nil, fmt.Errorf("failed to get columns: %w", err)
 	}
 
-	results := make([]map[string]interface{}, 0, 64)
+	results := make([]map[string]any, 0, 64)
 	for rows.Next() {
-		values := make([]interface{}, len(columns))
-		valuePtrs := make([]interface{}, len(columns))
+		values := make([]any, len(columns))
+		valuePtrs := make([]any, len(columns))
 		for i := range columns {
 			valuePtrs[i] = &values[i]
 		}
@@ -355,7 +352,7 @@ func (m *Adapter) ExecuteQuery(ctx context.Context, query string) (*common.Query
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
 
-		row := make(map[string]interface{})
+		row := make(map[string]any)
 		for i, col := range columns {
 			val := values[i]
 			if b, ok := val.([]byte); ok {
@@ -377,7 +374,7 @@ func (m *Adapter) ExecuteQuery(ctx context.Context, query string) (*common.Query
 	}, nil
 }
 
-func (m *Adapter) ExecuteQueryWithArgs(ctx context.Context, query string, args ...interface{}) (*common.QueryResult, error) {
+func (m *Adapter) ExecuteQueryWithArgs(ctx context.Context, query string, args ...any) (*common.QueryResult, error) {
 	rows, err := m.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute query: %w", err)
@@ -389,10 +386,10 @@ func (m *Adapter) ExecuteQueryWithArgs(ctx context.Context, query string, args .
 		return nil, fmt.Errorf("failed to get columns: %w", err)
 	}
 
-	results := make([]map[string]interface{}, 0, 64)
+	results := make([]map[string]any, 0, 64)
 	for rows.Next() {
-		values := make([]interface{}, len(columns))
-		valuePtrs := make([]interface{}, len(columns))
+		values := make([]any, len(columns))
+		valuePtrs := make([]any, len(columns))
 		for i := range columns {
 			valuePtrs[i] = &values[i]
 		}
@@ -401,7 +398,7 @@ func (m *Adapter) ExecuteQueryWithArgs(ctx context.Context, query string, args .
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
 
-		row := make(map[string]interface{})
+		row := make(map[string]any)
 		for i, col := range columns {
 			val := values[i]
 			if b, ok := val.([]byte); ok {
@@ -423,7 +420,7 @@ func (m *Adapter) ExecuteQueryWithArgs(ctx context.Context, query string, args .
 	}, nil
 }
 
-func (m *Adapter) ExecuteDMLWithArgs(ctx context.Context, query string, args ...interface{}) error {
+func (m *Adapter) ExecuteDMLWithArgs(ctx context.Context, query string, args ...any) error {
 	_, err := m.db.ExecContext(ctx, query, args...)
 	return err
 }

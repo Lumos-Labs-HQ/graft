@@ -13,7 +13,7 @@ import (
 func TestNewAdapter_ReturnsCorrectType(t *testing.T) {
 	cases := []struct {
 		provider string
-		wantType interface{}
+		wantType any
 	}{
 		{"postgresql", &postgres.Adapter{}},
 		{"postgres", &postgres.Adapter{}},

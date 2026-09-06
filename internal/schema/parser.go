@@ -426,7 +426,7 @@ func extractPKColumnNames(constraint string) []string {
 	// Remove nested parens (partition key group) and split by comma
 	inner = strings.NewReplacer("(", "", ")", "").Replace(inner)
 	var cols []string
-	for _, part := range strings.Split(inner, ",") {
+	for part := range strings.SplitSeq(inner, ",") {
 		col := strings.Trim(strings.TrimSpace(part), `"`)
 		if col != "" {
 			cols = append(cols, col)

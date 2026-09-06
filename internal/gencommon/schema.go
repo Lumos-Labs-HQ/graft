@@ -47,8 +47,8 @@ func (e *SchemaExpander) ExpandWildcardColumns(query *parser.Query) []*parser.Qu
 	tableByName := make(map[string]*parser.Table)
 	for _, t := range e.Tables {
 		name := t.Name
-		if idx := strings.LastIndex(name, "."); idx >= 0 {
-			name = name[idx+1:]
+		if _, after, ok := strings.CutLast(name, "."); ok {
+			name = after
 		}
 		tableByName[strings.ToLower(name)] = t
 	}
@@ -77,8 +77,8 @@ func (e *SchemaExpander) ExpandWildcardColumns(query *parser.Query) []*parser.Qu
 		if resolvedTable == "" {
 			return query.Columns
 		}
-		if idx := strings.LastIndex(resolvedTable, "."); idx >= 0 {
-			resolvedTable = resolvedTable[idx+1:]
+		if _, after, ok := strings.CutLast(resolvedTable, "."); ok {
+			resolvedTable = after
 		}
 		t := tableByName[strings.ToLower(resolvedTable)]
 		if t == nil {
@@ -194,14 +194,14 @@ func (e *SchemaExpander) ModelTypeForQuery(query *parser.Query, columns []*parse
 		return ""
 	}
 	// Strip keyspace prefix for lookup
-	if idx := strings.LastIndex(tableName, "."); idx >= 0 {
-		tableName = tableName[idx+1:]
+	if _, after, ok := strings.CutLast(tableName, "."); ok {
+		tableName = after
 	}
 
 	for _, t := range e.Tables {
 		name := t.Name
-		if idx := strings.LastIndex(name, "."); idx >= 0 {
-			name = name[idx+1:]
+		if _, after, ok := strings.CutLast(name, "."); ok {
+			name = after
 		}
 		if !strings.EqualFold(name, tableName) || len(t.Columns) != len(columns) {
 			continue
@@ -233,14 +233,14 @@ func (e *SchemaExpander) ModelTypeForQueryByName(query *parser.Query, columns []
 		return ""
 	}
 	// Strip keyspace prefix for lookup
-	if idx := strings.LastIndex(tableName, "."); idx >= 0 {
-		tableName = tableName[idx+1:]
+	if _, after, ok := strings.CutLast(tableName, "."); ok {
+		tableName = after
 	}
 
 	for _, t := range e.Tables {
 		name := t.Name
-		if idx := strings.LastIndex(name, "."); idx >= 0 {
-			name = name[idx+1:]
+		if _, after, ok := strings.CutLast(name, "."); ok {
+			name = after
 		}
 		if !strings.EqualFold(name, tableName) || len(t.Columns) != len(columns) {
 			continue

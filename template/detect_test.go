@@ -3,6 +3,7 @@ package template
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 )
 
@@ -24,11 +25,8 @@ func DetectProjectType(dir string) (isNode, isPython, isKotlin, isJava bool) {
 
 	isNode = stat("package.json")
 
-	for _, f := range []string{"requirements.txt", "pyproject.toml", "setup.py"} {
-		if stat(f) {
-			isPython = true
-			break
-		}
+	if slices.ContainsFunc([]string{"requirements.txt", "pyproject.toml", "setup.py"}, stat) {
+		isPython = true
 	}
 
 	switch {

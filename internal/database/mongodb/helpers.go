@@ -11,7 +11,7 @@ import (
 )
 
 // inferBSONType infers the MongoDB type from a Go value
-func inferBSONType(value interface{}) string {
+func inferBSONType(value any) string {
 	switch v := value.(type) {
 	case string:
 		return "string"
@@ -21,9 +21,9 @@ func inferBSONType(value interface{}) string {
 		return "double"
 	case bool:
 		return "bool"
-	case bson.M, map[string]interface{}:
+	case bson.M, map[string]any:
 		return "object"
-	case bson.A, []interface{}:
+	case bson.A, []any:
 		return "array"
 	case time.Time:
 		return "date"
@@ -43,7 +43,7 @@ func inferBSONType(value interface{}) string {
 }
 
 // convertBSONValue converts BSON values to standard Go types in-place for maps/slices
-func convertBSONValue(v interface{}) interface{} {
+func convertBSONValue(v any) any {
 	switch val := v.(type) {
 	case bson.M:
 		// Mutate in-place to avoid allocating a new map
@@ -58,7 +58,7 @@ func convertBSONValue(v interface{}) interface{} {
 		}
 		return val
 	case bson.D:
-		result := make(map[string]interface{}, len(val))
+		result := make(map[string]any, len(val))
 		for _, elem := range val {
 			result[elem.Key] = convertBSONValue(elem.Value)
 		}
@@ -108,7 +108,7 @@ func extractBetweenBalanced(str, start, end string) string {
 }
 
 // parseObjectID parses a string ID to ObjectID or returns the string as-is
-func parseObjectID(id string) (interface{}, error) {
+func parseObjectID(id string) (any, error) {
 	if len(id) == 24 {
 		oid, err := primitive.ObjectIDFromHex(id)
 		if err != nil {

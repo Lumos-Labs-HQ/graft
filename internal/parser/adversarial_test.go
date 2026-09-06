@@ -109,7 +109,7 @@ func TestParse_ConcurrentFilesNoRace(t *testing.T) {
 	os.MkdirAll(queriesDir, 0755)
 	writeSmokeSchema(t, schemaDir)
 
-	for i := 0; i < 20; i++ {
+	for i := range 20 {
 		content := "-- name: Q" + itoa(i) + " :one\nSELECT id, email FROM users WHERE id = $" + itoa((i%3)+1) + " AND email = $" + itoa((i%3)+2) + ";\n"
 		writeQueryFile(t, queriesDir, "f"+itoa(i)+".sql", content)
 	}
@@ -125,15 +125,13 @@ func TestParse_ConcurrentFilesNoRace(t *testing.T) {
 	}
 	// Run Parse repeatedly in parallel — shared inferrer + worker pool.
 	var wg sync.WaitGroup
-	for w := 0; w < 8; w++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+	for range 8 {
+		wg.Go(func() {
 			p := NewQueryParser(cfg)
 			if _, err := p.Parse(schema); err != nil {
 				t.Errorf("Parse: %v", err)
 			}
-		}()
+		})
 	}
 	wg.Wait()
 }

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 	"sync"
 
@@ -422,13 +422,7 @@ func (c *Config) EnsureDirectories() error {
 
 func (c *Config) Validate() error {
 	supportedProviders := []string{"postgresql", "postgres", "mysql", "sqlite", "sqlite3", "clickhouse", "scylla", "scylladb", "cassandra"}
-	supported := false
-	for _, provider := range supportedProviders {
-		if c.Database.Provider == provider {
-			supported = true
-			break
-		}
-	}
+	supported := slices.Contains(supportedProviders, c.Database.Provider)
 	if !supported {
 		return fmt.Errorf("unsupported database provider: %s. Supported providers: %v", c.Database.Provider, supportedProviders)
 	}
@@ -492,7 +486,7 @@ func (c *Config) GetSchemaFiles() ([]string, error) {
 
 	// Sort files for consistent ordering
 	// Files are typically named like: 001_users.sql, 002_posts.sql or users.sql, posts.sql
-	sort.Strings(files)
+	slices.Sort(files)
 	return files, nil
 }
 

@@ -10,7 +10,7 @@ import (
 )
 
 // ValidateColumnReferences checks if columns referenced in queries exist in the schema
-func ValidateColumnReferences(sql string, schema interface{}, sourceFile string) error {
+func ValidateColumnReferences(sql string, schema any, sourceFile string) error {
 	if schema == nil {
 		return nil
 	}
@@ -28,7 +28,7 @@ func ValidateColumnReferences(sql string, schema interface{}, sourceFile string)
 	outerSQL := stripSubqueryBlocks(stripOverClauses(sql))
 
 	schemaVal := reflect.ValueOf(schema)
-	if schemaVal.Kind() == reflect.Ptr {
+	if schemaVal.Kind() == reflect.Pointer {
 		schemaVal = schemaVal.Elem()
 	}
 
@@ -49,7 +49,7 @@ func ValidateColumnReferences(sql string, schema interface{}, sourceFile string)
 	tables := make(map[string]*tableInfo)
 	for i := 0; i < tablesField.Len(); i++ {
 		tablePtr := tablesField.Index(i)
-		if tablePtr.Kind() == reflect.Ptr {
+		if tablePtr.Kind() == reflect.Pointer {
 			tablePtr = tablePtr.Elem()
 		}
 		if tablePtr.Kind() == reflect.Struct {
@@ -64,14 +64,14 @@ func ValidateColumnReferences(sql string, schema interface{}, sourceFile string)
 				}
 
 				tables[key] = tblInfo
-				if dotIdx := strings.LastIndex(key, "."); dotIdx >= 0 {
-					tables[key[dotIdx+1:]] = tblInfo
+				if _, after, ok := strings.CutLast(key, "."); ok {
+					tables[after] = tblInfo
 				}
 
 				if columnsField.IsValid() && columnsField.Kind() == reflect.Slice {
 					for j := 0; j < columnsField.Len(); j++ {
 						colPtr := columnsField.Index(j)
-						if colPtr.Kind() == reflect.Ptr {
+						if colPtr.Kind() == reflect.Pointer {
 							colPtr = colPtr.Elem()
 						}
 						if colPtr.Kind() == reflect.Struct {

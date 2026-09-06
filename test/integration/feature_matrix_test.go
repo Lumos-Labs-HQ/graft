@@ -24,7 +24,6 @@ import (
 // Only sqlite is required (file-backed); server DBs reuse the same skip logic.
 func TestFeatureMatrix(t *testing.T) {
 	for _, db := range getDatabases() {
-		db := db
 		t.Run(db.Name, func(t *testing.T) {
 			t.Parallel()
 			requireServerDB(t, db)
